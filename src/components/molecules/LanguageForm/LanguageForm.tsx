@@ -1,0 +1,120 @@
+// Model
+import { TEmployeeUser } from "models/user.model";
+import { TLanguageFrom } from "./LanguageForm.model";
+// Hook Form
+import { SubmitHandler, useForm } from "react-hook-form";
+// Zod
+import z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+// MUI
+import { Box, Button, Grid } from "@mui/material";
+// Data
+import { languages } from "data/languages";
+// Components
+import ModalContainer from "components/atoms/ModalContainer/ModalContainer";
+import AutocompleteInput from "components/atoms/AutocompleteInput/AutocompleteInput";
+import RatingInput from "components/atoms/RatingInput/RatingInput";
+// Redux
+import { nanoid } from "@reduxjs/toolkit";
+import { useAppDispatch, useAppSelector } from "app/hooks";
+import { addStaticlyLanguage, useAddLanguageMutation, useEditLanguageItemMutation } from "app/slices/userSlice";
+import { RootState } from "app/store";
+// React
+import { useLayoutEffect } from "react";
+
+export const languageLevels = {
+    0.5: "Hello world!",
+    1: "Pre-Elementary",
+    1.5: "Elementary",
+    2: "Pre-Intermediate",
+    2.5: "Intermediate",
+    3: "Upper Intermediate",
+    3.5: "Pre-Advanced",
+    4: "Advanced",
+    4.5: "Advanced+",
+    5: "Native Speaker",
+};
+
+const languageFormSchema = z.object({
+    language: z.string().refine((str) => languages.some((ln) => ln.name === str), { message: "Choose a valid language" }),
+    rating: z.number({ invalid_type_error: "Assess your language level" }),
+});
+
+export type TLanguageFormSchemaType = z.infer<typeof languageFormSchema>;
+
+const LanguageForm = ({ isOpened, onClose, defaultValues }: TLanguageFrom) => {
+    const { uid } = useAppSelector((state: RootState) => state.user.currentUser as TEmployeeUser);
+    const { control, handleSubmit, reset } = useForm<TLanguageFormSchemaType>({
+        resolver: zodResolver(languageFormSchema),
+    });
+    const [addLanguage] = useAddLanguageMutation();
+    const [editLanguageItem] = useEditLanguageItemMutation();
+    const dispatch = useAppDispatch();
+
+    const onSubmitForm: SubmitHandler<TLanguageFormSchemaType> = async (data) => {
+        const formatedData = {
+            ...data,
+            rating: languageLevels[data.rating as keyof typeof languageLevels],
+            id: defaultValues ? defaultValues.id : nanoid(),
+        };
+
+        if (defaultValues) {
+            await editLanguageItem({ userID: uid, data: formatedData });
+        } else {
+            dispatch(addStaticlyLanguage(formatedData));
+            await addLanguage({ userID: uid, data: formatedData });
+        }
+
+        reset();
+        onClose();
+    };
+
+    useLayoutEffect(() => {
+        if (defaultValues) reset(defaultValues);
+    }, [defaultValues]);
+
+    return (
+        <ModalContainer isOpened={isOpened} onClose={onClose} title="Add skill">
+            <form autoComplete="off" onSubmit={handleSubmit(onSubmitForm)}>
+                <Grid container spacing={3}>
+                    <Grid item xs={12}>
+                        <AutocompleteInput
+                            label="choose language"
+                            control={control}
+                            name="language"
+                            optionLabel="name"
+                            options={languages}
+                            helperText="Select a language you want to add"
+                            renderOption={(params, { name, image }) => (
+                                <Box component="li" {...params} display="flex" gap={1}>
+                                    <img src={image} alt={name} width={20} />
+                                    {name}
+                                </Box>
+                            )}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <RatingInput
+                            control={control}
+                            name="rating"
+                            size="large"
+                            precision={0.5}
+                            labels={languageLevels}
+                            helperText="Assess your language level"
+                        />
+                    </Grid>
+                </Grid>
+                <Box display="flex" justifyContent="space-between" alignItems="center" paddingTop={2}>
+                    <Button variant="outlined" onClick={onClose}>
+                        Close
+                    </Button>
+                    <Button variant="contained" type="submit">
+                        Create
+                    </Button>
+                </Box>
+            </form>
+        </ModalContainer>
+    );
+};
+
+export default LanguageForm;
