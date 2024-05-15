@@ -17,7 +17,7 @@ import RatingInput from "components/atoms/RatingInput/RatingInput";
 // Redux
 import { nanoid } from "@reduxjs/toolkit";
 import { useAppDispatch, useAppSelector } from "app/hooks";
-import { addStaticlyLanguage, useAddLanguageMutation, useEditLanguageItemMutation } from "app/slices/userSlice";
+import { addStaticlyStatItem, useAddStatItemMutation, useEditStatItemMutation } from "app/slices/userSlice";
 import { RootState } from "app/store";
 // React
 import { useLayoutEffect } from "react";
@@ -47,8 +47,8 @@ const LanguageForm = ({ isOpened, onClose, defaultValues }: TLanguageFrom) => {
     const { control, handleSubmit, reset } = useForm<TLanguageFormSchemaType>({
         resolver: zodResolver(languageFormSchema),
     });
-    const [addLanguage] = useAddLanguageMutation();
-    const [editLanguageItem] = useEditLanguageItemMutation();
+    const [addStatItem] = useAddStatItemMutation();
+    const [editStatItem] = useEditStatItemMutation();
     const dispatch = useAppDispatch();
 
     const onSubmitForm: SubmitHandler<TLanguageFormSchemaType> = async (data) => {
@@ -59,10 +59,10 @@ const LanguageForm = ({ isOpened, onClose, defaultValues }: TLanguageFrom) => {
         };
 
         if (defaultValues) {
-            await editLanguageItem({ userID: uid, data: formatedData });
+            await editStatItem({ userID: uid, value: formatedData, key: "languages" });
         } else {
-            dispatch(addStaticlyLanguage(formatedData));
-            await addLanguage({ userID: uid, data: formatedData });
+            dispatch(addStaticlyStatItem({ value: formatedData, key: "languages" }));
+            await addStatItem({ userID: uid, value: formatedData, key: "languages" });
         }
 
         reset();

@@ -16,7 +16,7 @@ import { Box, Button, Grid } from "@mui/material";
 import { technologies } from "data/technologies";
 // Redux
 import { nanoid } from "@reduxjs/toolkit";
-import { addStaticlySkillItem, useAddSkillitemMutation, useEditSkillItemMutation } from "app/slices/userSlice";
+import { addStaticlyStatItem, useAddStatItemMutation, useEditStatItemMutation } from "app/slices/userSlice";
 import { useAppDispatch, useAppSelector } from "app/hooks";
 import { RootState } from "app/store";
 // React
@@ -47,8 +47,8 @@ export type TSkillFormSchemaType = z.infer<typeof skillFormSchema>;
 const SkillForm = ({ isOpened, onClose, defaultValues }: TSkillForm) => {
     const { uid } = useAppSelector((state: RootState) => state.user.currentUser as TEmployeeUser);
     const { control, handleSubmit, reset } = useForm<TSkillFormSchemaType>({ resolver: zodResolver(skillFormSchema) });
-    const [addSkillItem] = useAddSkillitemMutation();
-    const [editSkillItem] = useEditSkillItemMutation();
+    const [addStatItem] = useAddStatItemMutation();
+    const [editStatItem] = useEditStatItemMutation();
     const dispatch = useAppDispatch();
 
     const onSubmitForm: SubmitHandler<TSkillFormSchemaType> = async (data) => {
@@ -59,10 +59,10 @@ const SkillForm = ({ isOpened, onClose, defaultValues }: TSkillForm) => {
         };
 
         if (defaultValues) {
-            await editSkillItem({ userID: uid, data: formatedData });
+            await editStatItem({ userID: uid, value: formatedData, key: "skill" });
         } else {
-            dispatch(addStaticlySkillItem(formatedData));
-            await addSkillItem({ userID: uid, data: formatedData });
+            dispatch(addStaticlyStatItem({ value: formatedData, key: "skill" }));
+            await addStatItem({ userID: uid, value: formatedData, key: "skill" });
         }
 
         reset();

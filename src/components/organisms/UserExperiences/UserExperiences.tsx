@@ -18,10 +18,10 @@ import { TFormDataResumeExperience } from "models/resume.model";
 import { useAppDispatch, useAppSelector } from "app/hooks";
 import { RootState } from "app/store";
 import {
-    addStaticlyExperienceItem,
-    useAddExperienceItemMutation,
-    useEditExperienceItemMutation,
-    useRemoveEperienceItemMutation,
+    addStaticlyStatItem,
+    useAddStatItemMutation,
+    useEditStatItemMutation,
+    useRemoveStatItemMutation,
 } from "app/slices/userSlice";
 import { nanoid } from "@reduxjs/toolkit";
 import { TExperienceList } from "./UserExperiences.model";
@@ -51,7 +51,7 @@ const AnimationWrapper = styled("div")({
 
 const ExperienceList = ({ onHandleError, onEdit }: TExperienceList) => {
     const { experience, uid } = useAppSelector((state: RootState) => state.user.currentUser as TEmployeeUser);
-    const [removeExperienceItem] = useRemoveEperienceItemMutation();
+    const [removeStatItem] = useRemoveStatItemMutation();
 
     const isUserHasExperience = !!experience.length;
 
@@ -63,7 +63,7 @@ const ExperienceList = ({ onHandleError, onEdit }: TExperienceList) => {
                 subtitle={exp.companyName}
                 description={exp.role}
                 place={exp.country}
-                onDelete={async () => await removeExperienceItem({ userID: uid, experienceID: exp.id })}
+                onDelete={async () => await removeStatItem({ userID: uid, itemID: exp.id, key: "experience" })}
                 onEdit={() => onEdit(exp.id)}
             />
         </AnimationWrapper>
@@ -84,8 +84,8 @@ const ExperienceList = ({ onHandleError, onEdit }: TExperienceList) => {
 
 const UserExperiences = () => {
     const { uid, experience } = useAppSelector((state: RootState) => state.user.currentUser as TEmployeeUser);
-    const [addExperienceItem] = useAddExperienceItemMutation();
-    const [editExperienceItem] = useEditExperienceItemMutation();
+    const [addStatItem] = useAddStatItemMutation();
+    const [editStatItem] = useEditStatItemMutation();
     const dispath = useAppDispatch();
     const { active: addFormOpened, onSetToPositive: openAddForm, onSetToNegative: closeAddForm } = useToggle(false);
     const { active: editFormOpened, onSetToPositive: openEditForm, onSetToNegative: closeEditForm } = useToggle(false);
@@ -99,8 +99,8 @@ const UserExperiences = () => {
             id: nanoid(),
         };
 
-        dispath(addStaticlyExperienceItem(formatedData));
-        await addExperienceItem({ data: formatedData, userID: uid });
+        dispath(addStaticlyStatItem({ key: "experience", value: formatedData }));
+        await addStatItem({ value: formatedData, userID: uid, key: "experience" });
     };
 
     const onSaveChanges = async (data: TFormDataResumeExperience) => {
@@ -113,7 +113,7 @@ const UserExperiences = () => {
             id: defaultFormDataRef.current.id,
         };
 
-        await editExperienceItem({ userID: uid, data: formatedData });
+        await editStatItem({ userID: uid, value: formatedData, key: "experience" });
     };
 
     const onEdit = async (id: string) => {

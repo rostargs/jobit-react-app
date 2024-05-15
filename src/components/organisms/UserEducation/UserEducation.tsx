@@ -16,10 +16,10 @@ import { keyframes, styled } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "app/hooks";
 import { RootState } from "app/store";
 import {
-    addStaticlyEducationItem,
-    useAddEducationItemMutation,
-    useEditEducationItemMutation,
-    useRemoveEducationItemMutation,
+    addStaticlyStatItem,
+    useAddStatItemMutation,
+    useEditStatItemMutation,
+    useRemoveStatItemMutation,
 } from "app/slices/userSlice";
 import { nanoid } from "@reduxjs/toolkit";
 // Models
@@ -52,7 +52,7 @@ const AnimationWrapper = styled("div")({
 
 const EducationList = ({ onHandleError, onEdit }: TEducationList) => {
     const { education, uid } = useAppSelector((state: RootState) => state.user.currentUser as TEmployeeUser);
-    const [removeEducationItem] = useRemoveEducationItemMutation();
+    const [removeStatItem] = useRemoveStatItemMutation();
     const isUserHasEducation = !!education.length;
 
     const renderEducationList = education.map((edu) => (
@@ -61,7 +61,7 @@ const EducationList = ({ onHandleError, onEdit }: TEducationList) => {
                 {...edu}
                 title={edu.faculty}
                 subtitle={edu.universityTitle}
-                onDelete={async () => await removeEducationItem({ userID: uid, educationID: edu.id })}
+                onDelete={async () => await removeStatItem({ userID: uid, itemID: edu.id, key: "education" })}
                 onEdit={() => onEdit(edu.id)}
             />
         </AnimationWrapper>
@@ -81,8 +81,8 @@ const EducationList = ({ onHandleError, onEdit }: TEducationList) => {
 };
 
 const UserEducation = () => {
-    const [addEducationItem] = useAddEducationItemMutation();
-    const [editEducationItem] = useEditEducationItemMutation();
+    const [addStatItem] = useAddStatItemMutation();
+    const [editStatItem] = useEditStatItemMutation();
     const { uid, education } = useAppSelector((state: RootState) => state.user.currentUser as TEmployeeUser);
     const dispatch = useAppDispatch();
     const { active: addFormOpened, onSetToNegative: closeAddFrom, onSetToPositive: openAddForm } = useToggle(false);
@@ -96,8 +96,8 @@ const UserEducation = () => {
             enterYear: String(data.enterYear),
             leaveYear: String(data.leaveYear),
         };
-        dispatch(addStaticlyEducationItem(formatedData));
-        await addEducationItem({ userID: uid, data: formatedData });
+        dispatch(addStaticlyStatItem({ value: formatedData, key: "education" }));
+        await addStatItem({ userID: uid, value: formatedData, key: "education" });
     };
 
     const onEdit = async (id: string) => {
@@ -126,7 +126,7 @@ const UserEducation = () => {
             id: currentEducationInfoRef.current.id,
         };
 
-        await editEducationItem({ userID: uid, data: formatedData });
+        await editStatItem({ userID: uid, value: formatedData, key: "education" });
     };
 
     return (

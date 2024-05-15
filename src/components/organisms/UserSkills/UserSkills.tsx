@@ -19,7 +19,7 @@ import sadMail from "assets/images/errors/sadMail.svg";
 // React
 import { useRef } from "react";
 // Redux
-import { useRemoveSkillItemMutation } from "app/slices/userSlice";
+import { useRemoveStatItemMutation } from "app/slices/userSlice";
 import { useAppSelector } from "app/hooks";
 import { RootState } from "app/store";
 
@@ -42,7 +42,7 @@ const AnimationWrapper = styled("div")({
 
 const SkillList = ({ onHandleError, onEdit }: TSkillList) => {
     const { skill, uid } = useAppSelector((state: RootState) => state.user.currentUser as TEmployeeUser);
-    const [removeSkillItem] = useRemoveSkillItemMutation();
+    const [removeStatItem] = useRemoveStatItemMutation();
 
     const isUserHasSkills = !!skill.length;
 
@@ -55,7 +55,7 @@ const SkillList = ({ onHandleError, onEdit }: TSkillList) => {
                         title={skillName}
                         subtitle={rating}
                         image={currentLogo}
-                        onDelete={async () => await removeSkillItem({ userID: uid, skillID: id })}
+                        onDelete={async () => await removeStatItem({ userID: uid, itemID: id, key: 'skill' })}
                         onEdit={() => onEdit(id)}
                     />
                 </AnimationWrapper>

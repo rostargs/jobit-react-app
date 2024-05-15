@@ -68,18 +68,6 @@ const userSlice = createSlice({
         setUserLoading: (state, action: PayloadAction<boolean>) => {
             state.loading = action.payload;
         },
-        addStaticlyExperienceItem: (state, action: PayloadAction<TUploadDataResumeExperience>) => {
-            if (state.currentUser?.accountType === USER_TYPE.EMPLOYEE) state.currentUser.experience.push(action.payload);
-        },
-        addStaticlyEducationItem: (state, action: PayloadAction<TUploadDataResumeEducation>) => {
-            if (state.currentUser?.accountType === USER_TYPE.EMPLOYEE) state.currentUser.education.push(action.payload);
-        },
-        addStaticlySkillItem: (state, action: PayloadAction<TUploadDataResumeSkill>) => {
-            if (state.currentUser?.accountType === USER_TYPE.EMPLOYEE) state.currentUser.skill.push(action.payload);
-        },
-        addStaticlyLanguage: (state, action: PayloadAction<TUploadDataResumeLanguage>) => {
-            if (state.currentUser?.accountType === USER_TYPE.EMPLOYEE) state.currentUser.languages.push(action.payload);
-        },
         addStaticlyStatItem: (state, action: PayloadAction<TAssignDataTypeByKey>) => {
             const { key, value } = action.payload;
             if (state.currentUser?.accountType !== USER_TYPE.EMPLOYEE) return;
@@ -148,6 +136,7 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
                     throw new Error(error.message);
                 }
             },
+            invalidatesTags: ["User"],
         }),
         removeStatItem: builder.mutation<null, TRemoveStatItemParams>({
             queryFn: async ({ userID, key, itemID }) => {
@@ -160,6 +149,7 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
                 }
                 return { data: null };
             },
+            invalidatesTags: ["User"],
         }),
         editStatItem: builder.mutation<null, TAssignDataTypeByKey & { userID: string }>({
             queryFn: async ({ userID, value, key }) => {
@@ -202,223 +192,6 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
                 }
                 return { data: null };
             },
-        }),
-        addExperienceItem: builder.mutation<null, TAddItemProps<TUploadDataResumeExperience>>({
-            queryFn: async ({ data, userID }) => {
-                try {
-                    const { logo, ...rest } = data;
-                    if (typeof logo === "string") return { data: null };
-                    const {
-                        userData: { experience },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    const logoUrl = await uploadImageIntoStorage(storage, logo);
-                    experience.push({ ...rest, logo: logoUrl });
-                    await updateDoc(userRef, {
-                        experience,
-                    });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
-            invalidatesTags: ["User"],
-        }),
-        removeEperienceItem: builder.mutation<null, TRemoveItemProps<"experience">>({
-            queryFn: async ({ userID, experienceID }) => {
-                try {
-                    const {
-                        userData: { experience },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    const updatedExpList = experience.filter((exp) => exp.id !== experienceID);
-                    await updateDoc(userRef, { experience: updatedExpList });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
-            invalidatesTags: ["User"],
-        }),
-        addEducationItem: builder.mutation<null, TAddItemProps<TUploadDataResumeEducation>>({
-            queryFn: async ({ userID, data }) => {
-                try {
-                    const { logo, ...rest } = data;
-                    if (typeof logo === "string") return { data: null };
-                    const {
-                        userData: { education },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    const logoUrl = await uploadImageIntoStorage(storage, logo);
-                    education.push({ ...rest, logo: logoUrl });
-                    await updateDoc(userRef, { education });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
-            invalidatesTags: ["User"],
-        }),
-        removeEducationItem: builder.mutation<null, TRemoveItemProps<"education">>({
-            queryFn: async ({ userID, educationID }) => {
-                try {
-                    const {
-                        userData: { education },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    const updatedEduList = education.filter((edu) => edu.id !== educationID);
-                    await updateDoc(userRef, { education: updatedEduList });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
-            invalidatesTags: ["User"],
-        }),
-        addSkillitem: builder.mutation<null, TAddItemProps<TUploadDataResumeSkill>>({
-            queryFn: async ({ userID, data }) => {
-                try {
-                    const {
-                        userData: { skill },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    skill.push(data);
-                    await updateDoc(userRef, { skill });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
-            invalidatesTags: ["User"],
-        }),
-        removeSkillItem: builder.mutation<null, TRemoveItemProps<"skill">>({
-            queryFn: async ({ userID, skillID }) => {
-                try {
-                    const {
-                        userData: { skill },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    const updatedSkill = skill.filter((item) => item.id !== skillID);
-                    await updateDoc(userRef, { skill: updatedSkill });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
-            invalidatesTags: ["User"],
-        }),
-        addLanguage: builder.mutation<null, TAddItemProps<TUploadDataResumeLanguage>>({
-            queryFn: async ({ userID, data }) => {
-                try {
-                    const {
-                        userData: { languages },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    languages.push(data);
-                    await updateDoc(userRef, { languages });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
-            invalidatesTags: ["User"],
-        }),
-        removeLanguage: builder.mutation<null, TRemoveItemProps<"language">>({
-            queryFn: async ({ userID, languageID }) => {
-                try {
-                    const {
-                        userData: { languages },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    const updatedLanguages = languages.filter((language) => language.id !== languageID);
-                    await updateDoc(userRef, { languages: updatedLanguages });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
-            invalidatesTags: ["User"],
-        }),
-        editExperienceItem: builder.mutation<null, TAddItemProps<TUploadDataResumeExperience>>({
-            queryFn: async ({ userID, data }) => {
-                try {
-                    const { logo, ...rest } = data;
-                    if (typeof logo === "string") return { data: null };
-                    const {
-                        userData: { experience },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    const logoUrl = await uploadImageIntoStorage(storage, logo);
-                    const updatedExp = experience.map((exp) => {
-                        if (exp.id === data.id) exp = { ...rest, logo: logoUrl };
-                        return exp;
-                    });
-                    await updateDoc(userRef, { experience: updatedExp });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
-            invalidatesTags: ["User"],
-        }),
-        editEducationItem: builder.mutation<null, TAddItemProps<TUploadDataResumeEducation>>({
-            queryFn: async ({ userID, data }) => {
-                try {
-                    const { logo, ...rest } = data;
-                    if (typeof logo === "string") return { data: null };
-                    const {
-                        userData: { education },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    const logoUrl = await uploadImageIntoStorage(storage, logo);
-                    const updatedEdu = education.map((edu) => {
-                        if (edu.id === data.id) edu = { ...rest, logo: logoUrl };
-                        return edu;
-                    });
-                    await updateDoc(userRef, { education: updatedEdu });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
-            invalidatesTags: ["User"],
-        }),
-        editSkillItem: builder.mutation<null, TAddItemProps<TUploadDataResumeSkill>>({
-            queryFn: async ({ userID, data }) => {
-                try {
-                    const {
-                        userData: { skill },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    const updatedSkill = skill.map((item) => {
-                        if (item.id === data.id) item = { ...data };
-                        return item;
-                    });
-                    await updateDoc(userRef, { skill: updatedSkill });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
-            invalidatesTags: ["User"],
-        }),
-        editLanguageItem: builder.mutation<null, TAddItemProps<TUploadDataResumeLanguage>>({
-            queryFn: async ({ userID, data }) => {
-                try {
-                    const {
-                        userData: { languages },
-                        userRef,
-                    } = await getUserDataByID<TEmployeeUser>(firestore, userID);
-                    const updatedLanguages = languages.map((lang) => {
-                        if (lang.id === data.id) lang = { ...data };
-                        return lang;
-                    });
-                    await updateDoc(userRef, { languages: updatedLanguages });
-                    return { data: null };
-                } catch (error: any) {
-                    throw new Error(error.message);
-                }
-            },
             invalidatesTags: ["User"],
         }),
         addCompanyBenefit: builder.mutation<null, TAddItemProps<TUploadDataCompanyBenefits>>({
@@ -459,29 +232,13 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
 export const {
     useGetUserByIDQuery,
     useSetUserMutation,
-    useAddExperienceItemMutation,
-    useRemoveEperienceItemMutation,
-    useAddEducationItemMutation,
-    useRemoveEducationItemMutation,
-    useAddSkillitemMutation,
-    useRemoveSkillItemMutation,
-    useAddLanguageMutation,
-    useRemoveLanguageMutation,
-    useEditExperienceItemMutation,
-    useEditEducationItemMutation,
-    useEditSkillItemMutation,
-    useEditLanguageItemMutation,
     useAddCompanyBenefitMutation,
     useRemoveCompanyBenefitMutation,
+    useAddStatItemMutation,
+    useRemoveStatItemMutation,
+    useEditStatItemMutation,
 } = extendedUserFirebaseApi;
 
-export const {
-    setUserLoading,
-    addStaticlyExperienceItem,
-    setUserInfo,
-    addStaticlyEducationItem,
-    addStaticlySkillItem,
-    addStaticlyLanguage,
-} = userSlice.actions;
+export const { setUserLoading, addStaticlyStatItem } = userSlice.actions;
 
 export default userSlice.reducer;

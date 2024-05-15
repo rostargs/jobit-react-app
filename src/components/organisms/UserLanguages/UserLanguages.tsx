@@ -14,12 +14,12 @@ import { TLanguagesList } from "./UserLanguages.model";
 // Data
 import { languages as allLang } from "data/languages";
 // React
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 // Redux
 import { useToggle } from "hooks/useToggle";
 import { useAppSelector } from "app/hooks";
 import { RootState } from "app/store";
-import { useRemoveLanguageMutation } from "app/slices/userSlice";
+import { useRemoveStatItemMutation } from "app/slices/userSlice";
 
 const opacity = keyframes`
     from{
@@ -40,30 +40,34 @@ const AnimationWrapper = styled("div")({
 
 const LanguagesList = ({ onHandleError, onEdit }: TLanguagesList) => {
     const { languages, uid } = useAppSelector((state: RootState) => state.user.currentUser as TEmployeeUser);
-    const [removeLanguage] = useRemoveLanguageMutation();
+    const [removeStatItem] = useRemoveStatItemMutation();
 
     const isUserHasLanguages = !!languages.length;
 
-    const renderLanguagesList = languages.map(({ id, language, rating }) => {
-        const currentLang = allLang.find((lang) => lang.name === language);
-        return (
-            <Grid item md={6} key={id}>
-                <AnimationWrapper>
-                    <ProfileSmallCard
-                        title={language}
-                        subtitle={rating}
-                        onDelete={async () => await removeLanguage({ userID: uid, languageID: id })}
-                        onEdit={() => onEdit(id)}
-                        image={currentLang?.image}
-                    />
-                </AnimationWrapper>
-            </Grid>
-        );
-    });
+    const renderLanguagesList = useCallback(
+        () =>
+            languages.map(({ id, language, rating }) => {
+                const currentLang = allLang.find((lang) => lang.name === language);
+                return (
+                    <Grid item md={6} key={id}>
+                        <AnimationWrapper>
+                            <ProfileSmallCard
+                                title={language}
+                                subtitle={rating}
+                                onDelete={async () => await removeStatItem({ userID: uid, key: "languages", itemID: id })}
+                                onEdit={() => onEdit(id)}
+                                image={currentLang?.image}
+                            />
+                        </AnimationWrapper>
+                    </Grid>
+                );
+            }),
+        [languages]
+    );
 
     return isUserHasLanguages ? (
         <Grid container spacing={1}>
-            {renderLanguagesList}
+            {renderLanguagesList()}
         </Grid>
     ) : (
         <ErrorNotificationt
