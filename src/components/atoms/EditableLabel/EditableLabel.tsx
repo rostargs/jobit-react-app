@@ -29,7 +29,7 @@ const DisplayLabel = styled(Typography<"h6">)(({ theme }) => ({
     textWrap: "nowrap",
     textOverflow: "ellipsis",
     padding: "0.2rem 0.5rem",
-    border: "2px solid transparent",
+    border: "1px solid transparent",
     borderRadius: "0.5rem",
     transition: "border-color 0.2s ease",
     marginTop: "-0.2rem",

@@ -109,7 +109,7 @@ function EditableListItem<T extends FieldValues>({
         <Controller
             control={control}
             name={name}
-            render={({ fieldState: { error }, field: { onChange, value } }) => {
+            render={({ fieldState: { error }, field: { onChange, value, ref } }) => {
                 const isError = !!error?.message;
                 return (
                     <StyledListItem isError={isError} {...listItemProps} datatype-index={index}>

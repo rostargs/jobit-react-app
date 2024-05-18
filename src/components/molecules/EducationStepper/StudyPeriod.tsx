@@ -53,6 +53,7 @@ const StudyPeriod = () => {
                         disableFuture
                         maxDate={leaveYear}
                         views={["year"]}
+                        helperText="Specify the date of entry."
                     />
                 </Grid>
                 <Grid item xs={6}>
@@ -62,6 +63,7 @@ const StudyPeriod = () => {
                         label="leave year"
                         minDate={enterYear}
                         views={["year"]}
+                        helperText="Specify a past or future end date."
                     />
                 </Grid>
             </Grid>

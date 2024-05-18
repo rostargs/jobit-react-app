@@ -1,6 +1,6 @@
 // Components
 import EditableStatSection from "components/molecules/EditableStatSection/EditableStatSection";
-import SkillForm, { TSkillFormSchemaType, technologyExperienceLevels } from "components/molecules/SkillForm/SkillForm";
+import SkillForm, { TSkillFormSchemaType } from "components/molecules/SkillForm/SkillForm";
 import ProfileSmallCard from "components/molecules/ProfileSmallCard/ProfileSmallCard";
 import ErrorNotificationt from "components/atoms/ErrorNotification/ErrorNotificationt";
 // Assets
@@ -17,11 +17,12 @@ import { TSkillList } from "./UserSkills.model";
 // Assets
 import sadMail from "assets/images/errors/sadMail.svg";
 // React
-import { useRef } from "react";
+import { useRef, Fragment } from "react";
 // Redux
 import { useRemoveStatItemMutation } from "app/slices/userSlice";
 import { useAppSelector } from "app/hooks";
 import { RootState } from "app/store";
+import { technologyExperienceLevels } from "data/technologyExperienceLevels";
 
 const opacity = keyframes`
     from {
@@ -55,7 +56,7 @@ const SkillList = ({ onHandleError, onEdit }: TSkillList) => {
                         title={skillName}
                         subtitle={rating}
                         image={currentLogo}
-                        onDelete={async () => await removeStatItem({ userID: uid, itemID: id, key: 'skill' })}
+                        onDelete={async () => await removeStatItem({ userID: uid, itemID: id, key: "skill" })}
                         onEdit={() => onEdit(id)}
                     />
                 </AnimationWrapper>
@@ -106,7 +107,7 @@ const UserSkills = () => {
     };
 
     return (
-        <>
+        <Fragment>
             <EditableStatSection
                 sectionAdornment={skills}
                 title="Skills"
@@ -118,7 +119,7 @@ const UserSkills = () => {
             </EditableStatSection>
             <SkillForm isOpened={addFormOpend} onClose={closeAddForm} />
             <SkillForm isOpened={editForm} onClose={closeEditForm} defaultValues={currentSkillDataRef.current} />
-        </>
+        </Fragment>
     );
 };
 

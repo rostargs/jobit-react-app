@@ -10,7 +10,7 @@ import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 // React
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 function StepperContainer<T extends Record<string, any>>({
     steps,
@@ -21,7 +21,7 @@ function StepperContainer<T extends Record<string, any>>({
     onSaveChanges,
 }: TStepperContainer<T>) {
     const [activeStep, setActiveStep] = useState(0);
-
+    const validateSteps = useRef<Record<number, boolean> | null>(null);
     const schemas = steps.map((item) => item.validationRules);
     // @ts-ignore
     const validationSchema = z.union(schemas);
@@ -40,20 +40,33 @@ function StepperContainer<T extends Record<string, any>>({
 
     const { handleSubmit, trigger, reset, getValues } = methods;
 
+    const onTriggerCurrentStep = async () => {
+        validateSteps.current![activeStep] = await trigger();
+    };
+
+    const checkCompletedSteps = async (longStep: number) => {
+        if (!validateSteps.current) return false;
+        const stepsBefore = Object.keys(validateSteps.current).filter((key) => +key < longStep);
+        await onTriggerCurrentStep();
+        const isAllStepsBeforeValid = stepsBefore.every((step) => validateSteps.current![+step]);
+        isAllStepsBeforeValid || setActiveStep(stepsBefore.findIndex((step) => !validateSteps.current![+step]));
+        return isAllStepsBeforeValid;
+    };
+
     const onMoveToSpecificStep = async (step: number) => {
-        const isTheSameStep = activeStep === step;
-        const isPossibleStep = step - activeStep <= 1;
-        const isStepBack = step < activeStep;
-        const isStepValid = isStepBack ? true : !isTheSameStep && (await trigger());
-        if (isPossibleStep && isStepValid) setActiveStep(step);
+        if (activeStep === step) return;
+        await onTriggerCurrentStep();
+        const isStepValid = step < activeStep || (await checkCompletedSteps(step));
+        if (isStepValid) setActiveStep(step);
     };
 
     const onNextStep = async () => {
-        const isStepValid = await trigger();
-        if (isStepValid) setActiveStep((prev) => prev + 1);
+        await onTriggerCurrentStep();
+        if (validateSteps.current![activeStep]) setActiveStep((prev) => prev + 1);
     };
 
-    const onPreviousStep = () => {
+    const onPreviousStep = async () => {
+        await onTriggerCurrentStep();
         setActiveStep((prev) => prev - 1);
     };
 
@@ -70,12 +83,18 @@ function StepperContainer<T extends Record<string, any>>({
         if (defaultValues) reset(defaultValues);
     }, [defaultValues]);
 
+    useLayoutEffect(() => {
+        let validateState: Record<number, boolean> = {};
+        steps.forEach((_, index) => (validateState[index] = false));
+        validateSteps.current = validateState;
+    }, []);
+
     return (
         <ModalContainer isOpened={isOpened} title="Add Experience" onClose={onClose}>
             <Stepper alternativeLabel activeStep={activeStep}>
                 {steps.map(({ label }, index) => (
                     <Step key={label}>
-                        <StepLabel onClick={() => onMoveToSpecificStep(index)}>{label}</StepLabel>
+                        <StepLabel onClick={async () => await onMoveToSpecificStep(index)}>{label}</StepLabel>
                     </Step>
                 ))}
             </Stepper>

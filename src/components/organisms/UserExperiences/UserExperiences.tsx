@@ -1,86 +1,27 @@
 // Components
 import EditableStatSection from "components/molecules/EditableStatSection/EditableStatSection";
-import ProfileBaseCard from "components/molecules/ProfileBaseCard/ProfileBaseCard";
 import StepperContainer from "components/atoms/StepperContainer/StepperContainer";
+import ExperienceList from "./ExperienceList";
 // Assets
 import experiences from "assets/images/publicProfile/experience.svg";
 // Hooks
 import { useToggle } from "hooks/useToggle";
 // Data
 import { experienceStepperContent } from "data/experienceStepperContent";
-// MUI
-import { keyframes } from "@emotion/react";
-import { styled } from "@mui/material";
 // Models
 import { TEmployeeUser } from "models/user.model";
 import { TFormDataResumeExperience } from "models/resume.model";
 // Redux
 import { useAppDispatch, useAppSelector } from "app/hooks";
 import { RootState } from "app/store";
-import {
-    addStaticlyStatItem,
-    useAddStatItemMutation,
-    useEditStatItemMutation,
-    useRemoveStatItemMutation,
-} from "app/slices/userSlice";
+import { addStaticlyStatItem, useAddStatItemMutation, useEditStatItemMutation } from "app/slices/userSlice";
 import { nanoid } from "@reduxjs/toolkit";
-import { TExperienceList } from "./UserExperiences.model";
-import ErrorNotificationt from "components/atoms/ErrorNotification/ErrorNotificationt";
-// Assets
-import emptyBox from "assets/images/errors/emptyBox.svg";
+// Firebase Config
 import { storage } from "../../../firebaseConfig";
+// Utils
 import { getImageFileByUrlFromStorage } from "utils/uploadImageMethods";
-import { useRef } from "react";
-
-const slideLeft = keyframes`
-    from{
-        opacity: 0;
-        transform: translateX(-50px);
-    }
-    to{
-        opacity: 1;
-        transform: translateX(0px);
-    }
-`;
-
-const AnimationWrapper = styled("div")({
-    animation: `${slideLeft} linear forwards`,
-    animationTimeline: "view(y)",
-    animationRange: "entry",
-});
-
-const ExperienceList = ({ onHandleError, onEdit }: TExperienceList) => {
-    const { experience, uid } = useAppSelector((state: RootState) => state.user.currentUser as TEmployeeUser);
-    const [removeStatItem] = useRemoveStatItemMutation();
-
-    const isUserHasExperience = !!experience.length;
-
-    const renderExperienceList = experience.map((exp) => (
-        <AnimationWrapper key={exp.id}>
-            <ProfileBaseCard
-                {...exp}
-                title={exp.position}
-                subtitle={exp.companyName}
-                description={exp.role}
-                place={exp.country}
-                onDelete={async () => await removeStatItem({ userID: uid, itemID: exp.id, key: "experience" })}
-                onEdit={() => onEdit(exp.id)}
-            />
-        </AnimationWrapper>
-    ));
-
-    return isUserHasExperience ? (
-        renderExperienceList
-    ) : (
-        <ErrorNotificationt
-            image={emptyBox}
-            errorMessage="You've never worked at all, but it doesn't matter 😊."
-            buttonText="Add experience item"
-            onHandleError={onHandleError}
-            width={180}
-        />
-    );
-};
+// React
+import { Fragment, useRef } from "react";
 
 const UserExperiences = () => {
     const { uid, experience } = useAppSelector((state: RootState) => state.user.currentUser as TEmployeeUser);
@@ -133,7 +74,7 @@ const UserExperiences = () => {
     };
 
     return (
-        <>
+        <Fragment>
             <EditableStatSection
                 sectionAdornment={experiences}
                 title="Experiences"
@@ -156,7 +97,7 @@ const UserExperiences = () => {
                 onSaveChanges={onSaveChanges}
                 defaultValues={defaultFormDataRef.current}
             />
-        </>
+        </Fragment>
     );
 };
 

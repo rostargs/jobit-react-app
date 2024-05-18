@@ -7,7 +7,7 @@ import { Controller, FieldValues } from "react-hook-form";
 // Dayjs
 import dayjs from "dayjs";
 
-function DatePicker<T extends FieldValues>({ control, name, ...props }: TDatePicker<T>) {
+function DatePicker<T extends FieldValues>({ control, helperText, name, ...props }: TDatePicker<T>) {
     return (
         <Controller
             name={name}
@@ -29,7 +29,7 @@ function DatePicker<T extends FieldValues>({ control, name, ...props }: TDatePic
                             textField: {
                                 fullWidth: true,
                                 error: isError,
-                                helperText: error?.message,
+                                helperText: error?.message || helperText,
                             },
                         }}
                     />

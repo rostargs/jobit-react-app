@@ -9,8 +9,6 @@ import FormInput from "components/atoms/FormInput/FormInput";
 import ImageInput from "components/atoms/ImageInput/ImageInput";
 import AutocompleteInput from "components/atoms/AutocompleteInput/AutocompleteInput";
 // Data
-import { defaultExperienceLogos } from "data/defaultExperienceLogos";
-// Data
 import { countries } from "data/countries";
 
 export const companyInfoSchema = z.object({
@@ -42,7 +40,6 @@ const CompanyInfo = () => {
                     </Grid>
                     <Grid item xs={12}>
                         <AutocompleteInput
-                            // defaultValue={selectedCountryControlledValue}
                             name="country"
                             label="select country"
                             options={countries}
@@ -60,7 +57,7 @@ const CompanyInfo = () => {
                 </Grid>
             </Grid>
             <Grid item md>
-                <ImageInput control={control} name="logo" withSelection images={defaultExperienceLogos} />
+                <ImageInput control={control} name="logo" />
             </Grid>
         </Grid>
     );

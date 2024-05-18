@@ -24,8 +24,8 @@ export type TUploadDataResumeLanguage = TOmitResumeSmallCard<TLanguageFormSchema
 // Necessary props in upload type for experiece & education
 type TNecessaryPropsResumeMainInfo = {
     id: string;
-    enterYear: string;
-    leaveYear: string;
+    enterYear: string | number;
+    leaveYear: string | number;
     logo: string | File;
 };
 

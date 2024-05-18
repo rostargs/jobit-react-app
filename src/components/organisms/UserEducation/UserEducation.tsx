@@ -1,84 +1,28 @@
 // Components
 import EditableStatSection from "components/molecules/EditableStatSection/EditableStatSection";
-import ProfileBaseCard from "components/molecules/ProfileBaseCard/ProfileBaseCard";
-import ErrorNotificationt from "components/atoms/ErrorNotification/ErrorNotificationt";
+import EducationList from "./EducationList";
 import StepperContainer from "components/atoms/StepperContainer/StepperContainer";
 // Assets
-import cantFind from "assets/images/errors/cantFind.svg";
 import educationImage from "assets/images/publicProfile/education.svg";
 // Data
 import { universityStepperContent } from "data/universityStepperContent";
 // Hooks
 import { useToggle } from "hooks/useToggle";
-// MUI
-import { keyframes, styled } from "@mui/material";
 // Redux
 import { useAppDispatch, useAppSelector } from "app/hooks";
 import { RootState } from "app/store";
-import {
-    addStaticlyStatItem,
-    useAddStatItemMutation,
-    useEditStatItemMutation,
-    useRemoveStatItemMutation,
-} from "app/slices/userSlice";
+import { addStaticlyStatItem, useAddStatItemMutation, useEditStatItemMutation } from "app/slices/userSlice";
 import { nanoid } from "@reduxjs/toolkit";
 // Models
 import { TEmployeeUser } from "models/user.model";
 import { TFormDataResumeEducation } from "models/resume.model";
-import { TEducationList } from "./UserEducation.model";
 // React
 import { Suspense, useRef } from "react";
 // Firebase Config
 import { storage } from "../../../firebaseConfig";
 // Utils
 import { getImageFileByUrlFromStorage } from "utils/uploadImageMethods";
-
-const slideLeft = keyframes`
-    from{
-        opacity: 0;
-        transform: translateX(70px);
-    }
-    to{
-        opacity: 1;
-        transform: translateX(0px);
-    }
-`;
-
-const AnimationWrapper = styled("div")({
-    animation: `${slideLeft} linear forwards`,
-    animationTimeline: "view(y)",
-    animationRange: "entry",
-});
-
-const EducationList = ({ onHandleError, onEdit }: TEducationList) => {
-    const { education, uid } = useAppSelector((state: RootState) => state.user.currentUser as TEmployeeUser);
-    const [removeStatItem] = useRemoveStatItemMutation();
-    const isUserHasEducation = !!education.length;
-
-    const renderEducationList = education.map((edu) => (
-        <AnimationWrapper key={edu.id}>
-            <ProfileBaseCard
-                {...edu}
-                title={edu.faculty}
-                subtitle={edu.universityTitle}
-                onDelete={async () => await removeStatItem({ userID: uid, itemID: edu.id, key: "education" })}
-                onEdit={() => onEdit(edu.id)}
-            />
-        </AnimationWrapper>
-    ));
-
-    return isUserHasEducation ? (
-        renderEducationList
-    ) : (
-        <ErrorNotificationt
-            image={cantFind}
-            errorMessage="There is no information on educational institutions. Please add some so that HR can learn more about you 😶‍🌫️."
-            buttonText="Add education item"
-            onHandleError={onHandleError}
-            width={180}
-        />
-    );
-};
+import { getYearFromDate, setDefaultDateByYear } from "utils/dateOperations";
 
 const UserEducation = () => {
     const [addStatItem] = useAddStatItemMutation();
@@ -93,8 +37,8 @@ const UserEducation = () => {
         const formatedData = {
             ...data,
             id: nanoid(),
-            enterYear: String(data.enterYear),
-            leaveYear: String(data.leaveYear),
+            enterYear: getYearFromDate(data.enterYear),
+            leaveYear: getYearFromDate(data.leaveYear),
         };
         dispatch(addStaticlyStatItem({ value: formatedData, key: "education" }));
         await addStatItem({ userID: uid, value: formatedData, key: "education" });
@@ -107,8 +51,8 @@ const UserEducation = () => {
 
         const formatedData = {
             ...currentEducationItem,
-            enterYear: new Date(currentEducationItem.enterYear),
-            leaveYear: new Date(currentEducationItem.leaveYear),
+            enterYear: setDefaultDateByYear(+currentEducationItem.enterYear),
+            leaveYear: setDefaultDateByYear(+currentEducationItem.leaveYear),
             logo: logoFile,
         };
 

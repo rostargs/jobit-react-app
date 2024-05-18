@@ -8,6 +8,7 @@ import Image from "components/atoms/Image/Image";
 import { useToggle } from "hooks/useToggle";
 // Utils
 import { cutString } from "utils/cutString";
+import { formatDate } from "utils/dateOperations";
 // Constants
 const MAX_DESCRIPTION_LENGTH = 260;
 
@@ -76,9 +77,7 @@ const ProfileBaseCard = ({
     const formatedDescription =
         isShouldCut && active ? description : description && cutString(description, MAX_DESCRIPTION_LENGTH);
     const buttonContent = active ? "See less" : "See more";
-    const formatedEnterYear = String((typeof enterYear === "string" ? new Date(enterYear) : enterYear).toLocaleDateString());
-    const formatedEndYear = String((typeof leaveYear === "string" ? new Date(leaveYear) : leaveYear).toLocaleDateString());
-    const formatedLogo = typeof logo === 'string' ? logo : URL.createObjectURL(logo)
+    const formatedLogo = typeof logo === "string" ? logo : URL.createObjectURL(logo);
 
     return (
         <Card sx={{ boxShadow: "none" }}>
@@ -88,7 +87,7 @@ const ProfileBaseCard = ({
                     <Position component="h5">{title}</Position>
                     <CompanyName component="h6">{subtitle}</CompanyName>
                     <Details component="p">
-                        {place || `Grade: ${gradeLevel}`} &nbsp; | &nbsp; {formatedEnterYear} to {formatedEndYear}
+                        {place || `Grade: ${gradeLevel}`} &nbsp; | &nbsp; {formatDate(enterYear)} to {formatDate(leaveYear)}
                     </Details>
                 </Box>
                 <EducationCardActions>

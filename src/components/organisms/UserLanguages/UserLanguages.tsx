@@ -14,7 +14,7 @@ import { TLanguagesList } from "./UserLanguages.model";
 // Data
 import { languages as allLang } from "data/languages";
 // React
-import { useCallback, useRef } from "react";
+import { Fragment, useCallback, useRef } from "react";
 // Redux
 import { useToggle } from "hooks/useToggle";
 import { useAppSelector } from "app/hooks";
@@ -106,7 +106,7 @@ const UserLanguages = () => {
     };
 
     return (
-        <>
+        <Fragment>
             <EditableStatSection
                 sectionAdornment={languagesImage}
                 title="Languages"
@@ -118,7 +118,7 @@ const UserLanguages = () => {
             </EditableStatSection>
             <LanguageForm isOpened={addFormOpend} onClose={closeAddForm} />
             <LanguageForm isOpened={editForm} onClose={closeEditForm} defaultValues={currentLanguageDataRef.current} />
-        </>
+        </Fragment>
     );
 };
 

@@ -10,47 +10,15 @@ import { firestore, storage } from "../../firebaseConfig";
 import { TEmployeeUser, TEmployerUser, TUsers, USER_TYPE } from "models/user.model";
 import { TUploadDataCompanyBenefits } from "models/company.model";
 import {
-    TUploadDataResumeEducation,
-    TUploadDataResumeExperience,
-    TUploadDataResumeLanguage,
-    TUploadDataResumeSkill,
-} from "models/resume.model";
+    TAddCompanyItemProps,
+    TAddUpdateStatOperation,
+    TAssignDataTypeByKey,
+    TRemoveCompanyItemProps,
+    TRemoveStatOperation,
+    TUserSlice,
+} from "app/types/userSlice.model";
 // Utils
 import { getUserDataByID, uploadImageIntoStorage } from "utils/firebaseOperations";
-
-type TUserSlice = {
-    currentUser: TUsers | null;
-    loading: boolean;
-};
-
-type TEmployeeStatValues = Pick<TEmployeeUser, "education" | "experience" | "languages" | "skill">;
-type TEmployeeStatValueByKey<T extends keyof TEmployeeStatValues> = TEmployeeUser[T][number];
-type TAssignDataTypeByKey = {
-    [keyType in keyof TEmployeeStatValues]: { key: keyType } & {
-        value: {
-            [data in keyof TEmployeeStatValueByKey<keyType>]: TEmployeeStatValueByKey<keyType>[data];
-        };
-    };
-}[keyof TEmployeeStatValues];
-
-type TAddItemProps<T> = {
-    userID: string;
-    data: T;
-};
-
-type TMappedItemKey<T extends string> = {
-    [Key in `${T}ID`]: string;
-};
-
-type TRemoveItemProps<T extends string> = {
-    userID: string;
-} & TMappedItemKey<T>;
-
-type TRemoveStatItemParams = {
-    userID: string;
-    key: keyof TEmployeeStatValues;
-    itemID: string;
-};
 
 const initialState: TUserSlice = {
     currentUser: null,
@@ -101,7 +69,7 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
             },
             providesTags: (result, error, arg) => [{ type: "User", id: arg }],
         }),
-        addStatItem: builder.mutation<null, TAssignDataTypeByKey & { userID: string }>({
+        addStatItem: builder.mutation<null, TAddUpdateStatOperation>({
             queryFn: async ({ key, value, userID }) => {
                 try {
                     const { userData, userRef } = await getUserDataByID<TEmployeeUser>(firestore, userID);
@@ -138,7 +106,7 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
             },
             invalidatesTags: ["User"],
         }),
-        removeStatItem: builder.mutation<null, TRemoveStatItemParams>({
+        removeStatItem: builder.mutation<null, TRemoveStatOperation>({
             queryFn: async ({ userID, key, itemID }) => {
                 const { userData, userRef } = await getUserDataByID<TEmployeeUser>(firestore, userID);
                 try {
@@ -151,15 +119,18 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
             },
             invalidatesTags: ["User"],
         }),
-        editStatItem: builder.mutation<null, TAssignDataTypeByKey & { userID: string }>({
+        editStatItem: builder.mutation<null, TAddUpdateStatOperation>({
             queryFn: async ({ userID, value, key }) => {
-                const { userData, userRef } = await getUserDataByID<TEmployeeUser>(firestore, userID);
+                const {
+                    userData: { education, experience, skill, languages },
+                    userRef,
+                } = await getUserDataByID<TEmployeeUser>(firestore, userID);
                 try {
                     switch (key) {
                         case "experience":
                             if (typeof value.logo === "string") return { data: null };
                             const companyLogoURL = await uploadImageIntoStorage(storage, value.logo);
-                            const updatedExp = userData.experience.map((exp) =>
+                            const updatedExp = experience.map((exp) =>
                                 exp.id === value.id ? (exp = { ...value, logo: companyLogoURL }) : null
                             );
                             await updateDoc(userRef, { experience: updatedExp });
@@ -167,19 +138,19 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
                         case "education":
                             if (typeof value.logo === "string") return { data: null };
                             const universityLogoURL = await uploadImageIntoStorage(storage, value.logo);
-                            const updateEdu = userData.education.map((edu) =>
+                            const updateEdu = education.map((edu) =>
                                 edu.id === value.id ? (edu = { ...value, logo: universityLogoURL }) : null
                             );
                             await updateDoc(userRef, { education: updateEdu });
                             break;
                         case "skill":
-                            const updatedSkillData = userData.skill.map((item) =>
+                            const updatedSkillData = skill.map((item) =>
                                 item.id === value.id ? (item = { ...value }) : null
                             );
                             await updateDoc(userRef, { skill: updatedSkillData });
                             break;
                         case "languages":
-                            const updatedLanguages = userData.languages.map((lang) =>
+                            const updatedLanguages = languages.map((lang) =>
                                 lang.id === value.id ? (lang = { ...value }) : null
                             );
                             await updateDoc(userRef, { languages: updatedLanguages });
@@ -194,7 +165,7 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
             },
             invalidatesTags: ["User"],
         }),
-        addCompanyBenefit: builder.mutation<null, TAddItemProps<TUploadDataCompanyBenefits>>({
+        addCompanyBenefit: builder.mutation<null, TAddCompanyItemProps<TUploadDataCompanyBenefits>>({
             queryFn: async ({ userID, data }) => {
                 try {
                     const {
@@ -210,7 +181,7 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
             },
             invalidatesTags: ["User"],
         }),
-        removeCompanyBenefit: builder.mutation<null, TRemoveItemProps<"benefit">>({
+        removeCompanyBenefit: builder.mutation<null, TRemoveCompanyItemProps<"benefit">>({
             queryFn: async ({ userID, benefitID }) => {
                 try {
                     const {

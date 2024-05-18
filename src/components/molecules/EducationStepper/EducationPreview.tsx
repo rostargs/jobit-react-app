@@ -6,6 +6,7 @@ import { useFormContext } from "react-hook-form";
 import ProfileBaseCard from "../ProfileBaseCard/ProfileBaseCard";
 // Model
 import { TFormDataResumeEducation } from "models/resume.model";
+import { getYearFromDate } from "utils/dateOperations";
 
 const Wrapper = styled(Paper)(({ theme }) => ({
     padding: "0.5rem",
@@ -21,10 +22,12 @@ const EducationPreview = () => {
         title: faculty,
         subtitle: universityTitle,
         logo: URL.createObjectURL(logo),
-        enterYear,
-        leaveYear,
+        enterYear: getYearFromDate(enterYear),
+        leaveYear: getYearFromDate(leaveYear),
         gradeLevel,
     };
+
+    console.log(formData);
 
     return (
         <Wrapper>

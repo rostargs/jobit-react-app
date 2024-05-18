@@ -5,8 +5,8 @@ export type TProfileBaseCard =
 type TBaseProfileCardProps = {
     title: string;
     subtitle: string;
-    enterYear: Date | string;
-    leaveYear: Date | string;
+    enterYear: Date | string | number;
+    leaveYear: Date | string | number;
     logo: File | string;
     onEdit?: () => void;
     onDelete?: () => void;
