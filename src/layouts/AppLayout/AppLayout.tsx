@@ -44,7 +44,7 @@ const AppLayout = () => {
             <Stack width="100%">
                 <AppHeader />
                 <ContentWrapper component="main" id="main-content">
-                    <Container maxWidth="xxl">
+                    <Container maxWidth="xxl" sx={{ height: "100%" }}>
                         <Outlet />
                     </Container>
                 </ContentWrapper>

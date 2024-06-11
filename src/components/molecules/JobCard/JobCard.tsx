@@ -2,14 +2,18 @@
 import { Box, Card, CardContent, Typography, styled } from "@mui/material";
 // MUI Icons
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
 // Router
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 // Model
-import { TJobCard, TStyledCardProps } from "./JobCard.model";
+import { TDefaultVariant, TJobCard, TStyledCardProps } from "./JobCard.model";
 // Assets
-import logo from "assets/images/companies/Company-7.svg";
+import helper from "assets/images/companies/Company-7.svg";
 // Components
 import Image from "../../atoms/Image/Image";
+import NavBadge from "components/atoms/NavBadge/NavBadge";
+// React
+import { MouseEvent } from "react";
 
 const StyledCard = styled(Card, { shouldForwardProp: (prop) => prop !== "isOutlined" })<TStyledCardProps>(
     ({ theme, isOutlined }) => ({
@@ -58,8 +62,8 @@ const ApplyDate = styled(Typography<"span">)(({ theme }) => ({
     fontWeight: theme.typography.fontWeightRegular,
 }));
 
-const DefaultVariant = () => {
-    return <ViewJob to="#">View Job</ViewJob>;
+const DefaultVariant = ({ vacancyID }: TDefaultVariant) => {
+    return <ViewJob to={vacancyID}>View Job</ViewJob>;
 };
 
 const AppliedVariant = () => {
@@ -79,30 +83,50 @@ const ViewVariant = () => {
     );
 };
 
-const JobCard = ({ variant = "default", outlined = false }: TJobCard) => {
+const SavedVariant = () => {
+    return (
+        <Box display="flex" position="absolute" right={16} top={0}>
+            <NavBadge name="Save" invisible>
+                <BookmarkIcon color="secondary" />
+            </NavBadge>
+        </Box>
+    );
+};
+
+const JobCard = ({ variant, outlined = false, logo, companyName, location, position, userID, id, ...rest }: TJobCard) => {
     const jobCardVariants = {
-        default: <DefaultVariant />,
+        default: <DefaultVariant vacancyID={id} />,
         applied: <AppliedVariant />,
         view: <ViewVariant />,
+        saved: <SavedVariant />,
     };
+
     const currentVariant = jobCardVariants[variant];
 
+    const onClickCard = (event: MouseEvent<HTMLAnchorElement>) => {
+        if (variant !== "applied") event.preventDefault();
+    };
+
     return (
-        <StyledCard isOutlined={outlined}>
-            <Content>
-                <Link to="#" style={{ display: "flex", alignItems: "center" }}>
-                    <Image src={logo} alt="Company" height={80} width={80} />
-                </Link>
-            </Content>
-            <Content sx={{ width: "100%" }}>
-                <Position component="h5">Product Designer</Position>
-                <Box display="flex" alignItems="center" gap={{ xxl: 1, xs: 0 }} flexWrap="wrap">
-                    <CompanyTitle component="h6">Grameenphone</CompanyTitle>
-                    <CompanyPlacement component="p">Dhaka, Bangladesh</CompanyPlacement>
-                </Box>
-                {currentVariant}
-            </Content>
-        </StyledCard>
+        <NavLink to={id} onClick={onClickCard}>
+            {({ isActive }) => (
+                <StyledCard isOutlined={outlined}>
+                    <Content>
+                        <Link to="#" style={{ display: "flex", alignItems: "center" }}>
+                            <Image src={logo || helper} alt={`Visit ${companyName}'s page`} height={80} width={80} />
+                        </Link>
+                    </Content>
+                    <Content sx={{ width: "100%" }}>
+                        <Position component="h5">{position}</Position>
+                        <Box display="flex" alignItems="center" gap={{ xxl: 1, xs: 0 }} flexWrap="wrap">
+                            <CompanyTitle component="h6">{companyName}</CompanyTitle>
+                            <CompanyPlacement component="p">{location}</CompanyPlacement>
+                        </Box>
+                        {currentVariant}
+                    </Content>
+                </StyledCard>
+            )}
+        </NavLink>
     );
 };
 

@@ -45,3 +45,5 @@ export const domens = [
         domain: "Hospitality",
     },
 ];
+
+export type TDomensValues = (typeof domens)[number]['domain']

@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 // MUI
 import { Box, Button, Grid } from "@mui/material";
 // Data
-import { languages } from "data/languages";
+import { languageLevels, languages } from "data/languages";
 // Components
 import ModalContainer from "components/atoms/ModalContainer/ModalContainer";
 import AutocompleteInput from "components/atoms/AutocompleteInput/AutocompleteInput";
@@ -21,23 +21,14 @@ import { addStaticlyStatItem, useAddStatItemMutation, useEditStatItemMutation } 
 import { RootState } from "app/store";
 // React
 import { useLayoutEffect } from "react";
-
-export const languageLevels = {
-    0.5: "Hello world!",
-    1: "Pre-Elementary",
-    1.5: "Elementary",
-    2: "Pre-Intermediate",
-    2.5: "Intermediate",
-    3: "Upper Intermediate",
-    3.5: "Pre-Advanced",
-    4: "Advanced",
-    4.5: "Advanced+",
-    5: "Native Speaker",
-};
+// Utils
+import { formRequiredMessages } from "utils/formSettings";
 
 const languageFormSchema = z.object({
-    language: z.string().refine((str) => languages.some((ln) => ln.name === str), { message: "Choose a valid language" }),
-    rating: z.number({ invalid_type_error: "Assess your language level" }),
+    language: z
+        .string({ required_error: formRequiredMessages.select_option })
+        .refine((str) => languages.some((ln) => ln.name === str), { message: formRequiredMessages.select_option }),
+    rating: z.number({ required_error: formRequiredMessages.incorrect_level }),
 });
 
 export type TLanguageFormSchemaType = z.infer<typeof languageFormSchema>;

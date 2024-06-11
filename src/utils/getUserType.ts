@@ -17,11 +17,10 @@ export const getUserType = (authData: User, formData: TUserVariants): TUsers => 
                 languages: [],
                 skill: [],
                 chats: [],
+                savedVacancies: [],
             };
-            break;
         case USER_TYPE.EMPLOYER:
-            return { ...formData, uid, accountType: accountType, chats: [], benefits: [] };
-            break;
+            return { ...formData, uid, chats: [], benefits: [] };
         default:
             throw new Error("Invalid user type!");
     }

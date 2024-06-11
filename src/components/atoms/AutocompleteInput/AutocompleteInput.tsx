@@ -1,5 +1,4 @@
-// Model
-import { TAutocompleteInput, TAutocompleteInputOpition } from "./AutocompleteInput.model";
+import { TAutocompleteInput } from "./AutocompleteInput.model";
 // MUI
 import { Autocomplete, FormControl, FormHelperText, TextField, styled, autocompleteClasses } from "@mui/material";
 // Hook Form
@@ -8,13 +7,13 @@ import { Controller, FieldValues } from "react-hook-form";
 const Content = styled(FormControl)(({ theme, error }) => ({
     position: "relative",
 
-    [`& > .${autocompleteClasses.root} fieldset`]: error && {
+    [`& .${autocompleteClasses.root} fieldset`]: error && {
         borderColor: theme.palette.error.main,
     },
-    [`& > .${autocompleteClasses.focused} .MuiOutlinedInput-notchedOutline`]: error && {
+    [`& .${autocompleteClasses.focused} .MuiOutlinedInput-notchedOutline`]: error && {
         borderColor: `${theme.palette.error.main} !important`,
     },
-    [`& > .${autocompleteClasses.focused} .MuiInputLabel-root`]: error && {
+    [`& .${autocompleteClasses.focused} .MuiInputLabel-root`]: error && {
         color: theme.palette.error.main,
     },
     "&:hover .MuiOutlinedInput-notchedOutline": error && {
@@ -25,7 +24,7 @@ const Content = styled(FormControl)(({ theme, error }) => ({
 function AutocompleteInput<T extends FieldValues, Y extends Record<string, string>>({
     name,
     label,
-    options,
+    options = [], // Default to empty array
     control,
     helperText,
     optionLabel,
@@ -36,26 +35,26 @@ function AutocompleteInput<T extends FieldValues, Y extends Record<string, strin
             name={name}
             control={control}
             render={({ field: { onChange, onBlur, ref, value }, fieldState: { error } }) => {
-                const currentValue = options.find((option) => option[optionLabel] === value);
+                const currentValue = options.find((option) => option[optionLabel] === value) || undefined;
+
                 return (
                     <Content error={!!error?.message} fullWidth>
                         <Autocomplete
                             disablePortal
+                            //@ts-ignore
                             defaultValue={currentValue}
-                            onChange={(_, newValue) => {
-                                const field = newValue as TAutocompleteInputOpition<Y>;
-                                if (!field) return;
-                                onChange(field[optionLabel]);
-                            }}
-                            onInputChange={(_, value) => onChange(value)}
+                            onChange={(_, newValue) =>
+                                //@ts-ignore
+                                onChange(rest.multiple ? newValue?.map((item) => item[optionLabel]) || [] : newValue ? newValue[optionLabel]: null)
+                            }
+                            onInputChange={(_, inputValue) => onChange(inputValue)}
                             id={name}
                             options={options}
                             {...rest}
                             renderInput={(params) => (
                                 <TextField {...params} label={label} inputRef={ref} error={!!error?.message} />
                             )}
-                            //@ts-ignore
-                            getOptionLabel={(option) => option[optionLabel]}
+                            getOptionLabel={(option) => (option ? option[optionLabel] : "")}
                             onBlur={onBlur}
                         />
                         <FormHelperText sx={{ position: "absolute", top: "100%" }}>

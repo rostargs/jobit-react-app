@@ -63,7 +63,11 @@ function EditableLabel<T extends FieldValues>({ name, control, placeholder = "Ed
                             <EditInput value={value} onChange={onChange} error={!!error?.message} {...props} autoFocus />
                         ) : (
                             <Box maxWidth="30vw">
-                                <DisplayLabel component="h6" onClick={onSetToPositive}>
+                                <DisplayLabel
+                                    component="h6"
+                                    onClick={onSetToPositive}
+                                    color={!!error?.message ? "error" : "inherit"}
+                                >
                                     {value || placeholder}
                                 </DisplayLabel>
                             </Box>

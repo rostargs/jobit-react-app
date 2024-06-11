@@ -6,7 +6,7 @@ import MailRoundedIcon from "@mui/icons-material/MailRounded";
 
 export const appHeaderNavBadges: TNavBadge[] = [
     {
-        to: "#",
+        to: "/notifications",
         children: <NotificationsIcon />,
         name: "Notifications",
     },

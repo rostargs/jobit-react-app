@@ -7,7 +7,7 @@ import SendIcon from "@mui/icons-material/Send";
 import NavBadge from "components/atoms/NavBadge/NavBadge";
 import Viewer from "components/molecules/Viewer/Viewer";
 import FormInput from "components/atoms/FormInput/FormInput";
-import ErrorNotificationt from "components/atoms/ErrorNotification/ErrorNotificationt";
+import ErrorNotification from "components/atoms/ErrorNotification/ErrorNotification";
 // Hook Form
 import { SubmitHandler, useForm } from "react-hook-form";
 // Zod
@@ -27,7 +27,7 @@ const ChatCard = styled(Paper)({
     height: "100%",
     display: "flex",
     flexDirection: "column",
-    overflow: 'hidden'
+    overflow: "hidden",
 });
 
 const MessagesContainer = styled(Box)({
@@ -78,16 +78,12 @@ const Contributor = () => {
 };
 
 const ChatControls = () => {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<TSendMessageSchemaType>({
+    const { control, handleSubmit } = useForm<TSendMessageSchemaType>({
         resolver: zodResolver(sendMessageSchema),
         mode: "onChange",
     });
 
-    const onSendMessage: SubmitHandler<TSendMessageSchemaType> = async (data, event) => {
+    const onSendMessage: SubmitHandler<TSendMessageSchemaType> = async (data) => {
         console.log(data);
     };
 
@@ -96,7 +92,7 @@ const ChatControls = () => {
             <Box>
                 <form autoComplete="off" onSubmit={handleSubmit(onSendMessage)}>
                     <FormInput
-                        register={register}
+                        control={control}
                         placeholder="Write a message"
                         name="message"
                         type="text"
@@ -106,7 +102,6 @@ const ChatControls = () => {
                             </IconButton>
                         }
                         sx={{ borderRadius: "8px" }}
-                        errorText={errors.message?.message}
                         multiline
                         maxRows={3}
                     />
@@ -134,7 +129,7 @@ const MessagesList = () => {
                 <Message variant="outgoing" />
                 <Message variant="outgoing" />
                 <Message variant="outgoing" /> */}
-            <ErrorNotificationt image={emptyMail} errorMessage="There are no messages yet 😒." width={220} />
+            <ErrorNotification image={emptyMail} errorMessage="There are no messages yet 😒." width={220} />
         </>
     );
 };

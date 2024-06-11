@@ -17,6 +17,9 @@ const CompanyStaff = lazy(() => import("components/organisms/CompanyStaff/Compan
 import SearchFriend from "components/molecules/SearchFriend/SearchFriend";
 import ChatRooms from "components/organisms/ChatRooms/ChatRooms";
 import Loader from "components/atoms/Loader/Loader";
+import Vacancy from "components/organisms/Vacancy/Vacancy";
+import SelectVacancy from "components/organisms/SelectVacancy/SelectVacancy";
+import SavedJobs from "components/organisms/SavedJobs/SavedJobs";
 // Pages
 const Dashboard = lazy(() => import("pages/Dashboard"));
 const PublicProfile = lazy(() => import("pages/PublicProfile"));
@@ -24,13 +27,14 @@ const Jobs = lazy(() => import("pages/Jobs"));
 const MyJobs = lazy(() => import("pages/MyJobs"));
 const CompanyProfile = lazy(() => import("pages/CompanyProfile"));
 const Messanger = lazy(() => import("pages/Messanger"));
+import AddVacancy from "pages/AddVacancy";
+import Notifications from "pages/Notifications";
 // Hooks
 import { useAuthFirebase } from "hooks/useAuthFirebase";
 // Firebase Config
 import { auth } from "./firebaseConfig";
 // Protected Route
 import ProtectedRoute from "./ProtectedRoute";
-import AddVacancy from "pages/AddVacancy";
 
 function App() {
     useAuthFirebase(auth);
@@ -66,8 +70,15 @@ function App() {
                             />
                         </Route>
                         <Route path="jobs">
-                            <Route path="all" element={<Jobs />}></Route>
-                            <Route path="mine" element={<MyJobs />}></Route>
+                            <Route path="all" element={<Jobs />}>
+                                <Route index element={<SelectVacancy />} />
+                                <Route path=":id" element={<Vacancy />} />
+                            </Route>
+                            <Route path="mine" element={<MyJobs />}>
+                                <Route index element={<SavedJobs />} />
+                                <Route path="rejected" element={<>Rejected</>} />
+                                <Route path="applied" element={<>Applied</>} />
+                            </Route>
                             <Route path="add-vacancy" element={<AddVacancy />} />
                         </Route>
                         <Route path="messanger" element={<Messanger />}>
@@ -79,6 +90,7 @@ function App() {
                             <Route path="vacancies" element={<CompanyVacancies />} />
                             <Route path="staff" element={<CompanyStaff />} />
                         </Route>
+                        <Route path="notifications" element={<Notifications />}></Route>
                     </Route>
                 </Routes>
             </Suspense>

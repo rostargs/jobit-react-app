@@ -4,13 +4,16 @@ import { Box, Button, Typography, styled } from "@mui/material";
 import { TErrorNotification } from "./ErrorNotification.model";
 
 const Wrapper = styled(Box)({
-    display: "grid",
-    placeItems: "center",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
     textAlign: "center",
     gap: "0.5rem",
+    height: "100%",
 });
 
-const ErrorNotificationt = ({ errorMessage, image, buttonText, onHandleError, ...rest }: TErrorNotification) => {
+const ErrorNotification = ({ errorMessage, image, buttonText, onHandleError, ...rest }: TErrorNotification) => {
     return (
         <Wrapper>
             <img src={image} alt="Error image" {...rest} />
@@ -24,4 +27,4 @@ const ErrorNotificationt = ({ errorMessage, image, buttonText, onHandleError, ..
     );
 };
 
-export default ErrorNotificationt;
+export default ErrorNotification;

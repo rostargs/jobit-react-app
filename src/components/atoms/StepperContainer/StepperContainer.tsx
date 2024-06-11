@@ -22,6 +22,8 @@ function StepperContainer<T extends Record<string, any>>({
 }: TStepperContainer<T>) {
     const [activeStep, setActiveStep] = useState(0);
     const validateSteps = useRef<Record<number, boolean> | null>(null);
+    const [invalidStepIndex, setInvalidStepIndex] = useState<number | null>(null);
+
     const schemas = steps.map((item) => item.validationRules);
     // @ts-ignore
     const validationSchema = z.union(schemas);
@@ -42,6 +44,7 @@ function StepperContainer<T extends Record<string, any>>({
 
     const onTriggerCurrentStep = async () => {
         validateSteps.current![activeStep] = await trigger();
+        setInvalidStepIndex(validateSteps.current![activeStep] === false ? activeStep : null);
     };
 
     const checkCompletedSteps = async (longStep: number) => {
@@ -94,7 +97,12 @@ function StepperContainer<T extends Record<string, any>>({
             <Stepper alternativeLabel activeStep={activeStep}>
                 {steps.map(({ label }, index) => (
                     <Step key={label}>
-                        <StepLabel onClick={async () => await onMoveToSpecificStep(index)}>{label}</StepLabel>
+                        <StepLabel
+                            onClick={async () => await onMoveToSpecificStep(index)}
+                            error={invalidStepIndex === index}
+                        >
+                            {label}
+                        </StepLabel>
                     </Step>
                 ))}
             </Stepper>

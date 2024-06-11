@@ -1,22 +1,20 @@
 // MUI
-import { Paper, styled } from "@mui/material";
-import NavIcon from "components/atoms/NavIcon/NavIcon";
-import { myJobsNav } from "data/myJobsNav";
-
-const Nav = styled(Paper)(({ theme }) => ({
-    boxShadow: "none",
-    border: `0.1px solid ${theme.palette.grey[300]}`,
-    display: "flex",
-    padding: "0.25rem",
-    width: "fit-content",
-    borderRadius: "0.5rem",
-    alignItems: "center",
-    gap: "0.25rem",
-}));
+import { Box, Tab, Tabs } from "@mui/material";
+// Router
+import { Link, useLocation } from "react-router-dom";
 
 const MyJobsNav = () => {
-    const renderNavigation = myJobsNav.map((item) => <NavIcon {...item} key={item.label} />);
-    return <Nav>{renderNavigation}</Nav>;
+    const { pathname } = useLocation();
+
+    return (
+        <Box component="nav">
+            <Tabs value={pathname} aria-label="Job stats">
+                <Tab component={Link} label="Saved" to="/jobs/mine" value="/jobs/mine" />
+                <Tab component={Link} label="Rejected" to="/jobs/mine/rejected" value="/jobs/mine/rejected" />
+                <Tab component={Link} label="Applied" to="/jobs/mine/applied" value="/jobs/mine/applied" />
+            </Tabs>
+        </Box>
+    );
 };
 
 export default MyJobsNav;

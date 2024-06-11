@@ -1,7 +1,7 @@
 // Model
 import { TViewer, TViewerCardProps, TViewerVariantProps } from "./Viewer.model";
 // MUI
-import { Box, Card, CardContent, List, ListItem, Typography, styled } from "@mui/material";
+import { Box, Button, ButtonGroup, Card, CardContent, Typography, styled } from "@mui/material";
 // Router
 import { Link } from "react-router-dom";
 // Components
@@ -13,6 +13,7 @@ const ViewerCard = styled(Card, { shouldForwardProp: (prop) => prop !== "isOutli
         alignItems: "center",
         boxShadow: "none",
         border: isOutlined ? `0.1px solid ${theme.palette.grey[300]}` : "none",
+        width: "100%",
     })
 );
 
@@ -27,12 +28,8 @@ const ViewerInfo = styled(CardContent)({
     },
 });
 
-const HardSkillsList = styled(List)({
-    display: "flex",
-    gap: "0.5rem",
-});
-
-const Skill = styled(ListItem)(({ theme }) => ({
+const Info = styled(Typography<"p">)(({ theme }) => ({
+    ...theme.typography.subtitle1,
     color: theme.palette.grey[600],
     width: "auto",
 }));
@@ -42,8 +39,6 @@ const VisitViewer = styled(Link)(({ theme }) => ({
     color: theme.palette.primary.main,
     fontWeight: theme.typography.fontWeightMedium,
 }));
-
-const textSkills = ["HR Manager", "Grameenphone"];
 
 const ViewVariant = ({ buttonText = "View Profile" }: TViewerVariantProps) => {
     return <VisitViewer to="#">{buttonText}</VisitViewer>;
@@ -57,29 +52,51 @@ const MessageVariant = ({ buttonText = "Send message" }: TViewerVariantProps) =>
     );
 };
 
-const Viewer = ({ outlined = false, variant = "short", buttonText }: TViewer) => {
+const VacancyVariant = () => {
+    return (
+        <Box display="flex" position="absolute" right={16}>
+            <ButtonGroup>
+                <Button>Apply</Button>
+                <Button color="warning">Deny</Button>
+            </ButtonGroup>
+        </Box>
+    );
+};
+
+const Viewer = ({
+    outlined = false,
+    variant,
+    buttonText,
+    uid,
+    companyName,
+    position,
+    domen,
+    logo,
+    avatar,
+    name,
+    ownerName,
+}: TViewer) => {
     const viewerVariants = {
         short: <ViewVariant buttonText={buttonText} />,
         full: <MessageVariant buttonText={buttonText} />,
+        vacancy: <VacancyVariant />,
     };
-    const currentVariant = viewerVariants[variant];
 
-    const renderSkills = textSkills.map((skill) => (
-        <Skill disableGutters disablePadding key={skill}>
-            {skill}
-        </Skill>
-    ));
+    const currentVariant = viewerVariants[variant];
 
     return (
         <ViewerCard isOutlined={outlined}>
             <ViewerInfo>
-                <UserAvatar userName="BOB" sx={{ width: 72, height: 72 }} />
+                <UserAvatar userName={(companyName || name)!} sx={{ width: 72, height: 72 }} />
             </ViewerInfo>
             <ViewerInfo sx={{ width: "100%" }}>
                 <Typography component="h4" variant="subtitle1" fontWeight="medium">
-                    Hamish Marsh
+                    {ownerName || name}
                 </Typography>
-                <HardSkillsList disablePadding>{renderSkills}</HardSkillsList>
+                <Box display="flex" gap={1}>
+                    <Info component="p">{companyName || "Unemployed"}</Info>
+                    <Info component="p">{domen || position}</Info>
+                </Box>
                 {currentVariant}
             </ViewerInfo>
         </ViewerCard>

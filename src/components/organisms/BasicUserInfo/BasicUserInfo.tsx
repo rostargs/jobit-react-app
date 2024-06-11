@@ -14,6 +14,7 @@ import { useToggle } from "hooks/useToggle";
 import { editableEmployeeInfoFields } from "data/editableUserInfoFields";
 import { countries } from "data/countries";
 import { positions } from "data/hierarchy";
+import { genders } from "data/genders";
 // Zod
 import z, { ZodTypeAny } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,41 +29,34 @@ import { RootState } from "app/store";
 import { useEffect } from "react";
 // Model
 import { TEmployeeUser } from "models/user.model";
+// Utils
+import { formContentLength, formRequiredMessages } from "utils/formSettings";
 
-const genders = [
-    {
-        gender: "Male",
-    },
-    {
-        gender: "Female",
-    },
-];
-
-export type TEmployeeDataKeys = keyof Omit<Pick<TEmployeeUser, "data">["data"], "avatar">;
+export type TEmployeeDataKeys = keyof Omit<Pick<TEmployeeUser, "data">["data"], "avatar" | "currentJob">;
 
 const editUserInfoSchema = z.object<Record<TEmployeeDataKeys, ZodTypeAny>>({
-    email: z.string().optional(),
-    name: z.string().min(6).max(24),
+    email: z.string(),
+    name: z.string().min(formContentLength.min_name_length).max(formContentLength.max_name_length),
     gender: z
-        .string()
-        .refine((str) => genders.some((gender) => gender.gender === str), { message: "Choose correct option." }),
+        .string({ required_error: formRequiredMessages.select_option })
+        .refine((str) => genders.some((gender) => gender.gender === str), { message: formRequiredMessages.select_option }),
     location: z
-        .string()
-        .refine((str) => countries.some((country) => country.country === str), { message: "Choose correct option." }),
+        .string({ required_error: formRequiredMessages.select_option })
+        .refine((str) => countries.some((country) => country.country === str), {
+            message: formRequiredMessages.select_option,
+        }),
     position: z
-        .string()
-        .refine((str) => positions.some((pos) => pos.position === str), { message: "Choose correct option." }),
-    phoneNumber: z.string().refine((number) => isValidPhoneNumber(number), { message: "Wtire correct phone number." }),
+        .string({ required_error: formRequiredMessages.select_option })
+        .refine((str) => positions.some((pos) => pos.position === str), { message: formRequiredMessages.select_option }),
+    phoneNumber: z
+        .string({ required_error: formRequiredMessages.invalid_number })
+        .refine((number) => isValidPhoneNumber(number), { message: formRequiredMessages.invalid_number }),
 });
 
 export type TEditUserInfoShemaType = z.infer<typeof editUserInfoSchema>;
 
 const EditUserInfo = () => {
-    const {
-        control,
-        register,
-        formState: { errors },
-    } = useFormContext<TEditUserInfoShemaType>();
+    const { control } = useFormContext<TEditUserInfoShemaType>();
 
     return (
         <>
@@ -77,14 +71,7 @@ const EditUserInfo = () => {
                 />
             </Grid>
             <Grid item md={6}>
-                <FormInput
-                    register={register}
-                    errorText={errors.name?.message?.toString()}
-                    label="name"
-                    name="name"
-                    type="text"
-                    helperText="Write your full name."
-                />
+                <FormInput control={control} label="name" name="name" type="text" helperText="Write your full name." />
             </Grid>
             <Grid item md={6}>
                 <PhoneInput

@@ -9,7 +9,7 @@ import { useRemoveStatItemMutation } from "app/slices/userSlice";
 import { useAppSelector } from "app/hooks";
 // Components
 import ProfileBaseCard from "components/molecules/ProfileBaseCard/ProfileBaseCard";
-import ErrorNotificationt from "components/atoms/ErrorNotification/ErrorNotificationt";
+import ErrorNotification from "components/atoms/ErrorNotification/ErrorNotification";
 // Assets
 import cantFind from "assets/images/errors/cantFind.svg";
 
@@ -50,7 +50,7 @@ const EducationList = ({ onHandleError, onEdit }: TEducationList) => {
     return isUserHasEducation ? (
         renderEducationList
     ) : (
-        <ErrorNotificationt
+        <ErrorNotification
             image={cantFind}
             errorMessage="There is no information on educational institutions. Please add some so that HR can learn more about you 😶‍🌫️."
             buttonText="Add education item"

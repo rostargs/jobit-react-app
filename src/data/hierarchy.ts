@@ -54,4 +54,7 @@ export const positions = [
     { position: "Agricultural Technology (AgriTech)" },
     { position: "Environmental Technology (GreenTech)" },
     { position: "Space Technology" },
-];
+] as const;
+
+export type TPositionKeys = (typeof positions)[number];
+export type TPositionValues = TPositionKeys["position"];

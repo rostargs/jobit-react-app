@@ -22,12 +22,14 @@ import { useAppDispatch, useAppSelector } from "app/hooks";
 import { RootState } from "app/store";
 // React
 import { useLayoutEffect } from "react";
+// Utils
+import { formRequiredMessages } from "utils/formSettings";
 
 const skillFormSchema = z.object({
     skillName: z
-        .string()
-        .refine((str) => technologies.some((tech) => tech.name === str), { message: "Choose a valid skill name" }),
-    rating: z.number({ invalid_type_error: "Rate your skill level" }),
+        .string({ required_error: formRequiredMessages.select_option })
+        .refine((str) => technologies.some((tech) => tech.name === str), { message: formRequiredMessages.select_option }),
+    rating: z.number({ required_error: formRequiredMessages.incorrect_level }),
 });
 
 export type TSkillFormSchemaType = z.infer<typeof skillFormSchema>;

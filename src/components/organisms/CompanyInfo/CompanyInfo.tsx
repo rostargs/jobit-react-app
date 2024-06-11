@@ -28,47 +28,63 @@ import { useEffect } from "react";
 // Redux
 import { useAppSelector } from "app/hooks";
 import { RootState } from "app/store";
+// Utils
+import { formRequiredMessages } from "utils/formSettings";
 
 export type TEmployerDataFields = keyof Omit<Pick<TEmployerUser, "data">["data"], "logo">;
 
 const editCompanyInfoSchema = z.object<Record<TEmployerDataFields, ZodTypeAny>>({
     email: z.string().optional(),
     location: z
-        .string()
-        .refine((str) => countries.some((country) => country.country === str), { message: "Choose correct option." }),
-    phoneNumber: z.string().refine((number) => isValidPhoneNumber(number), { message: "Wtire correct phone number." }),
-    ownerName: z.string(),
-    domen: z.string().refine((str) => domens.some((domen) => domen.domain === str), { message: "Choose correct option." }),
-    companyName: z.string(),
+        .array(
+            z.string().refine((str) => countries.some((country) => country.country === str), {
+                message: formRequiredMessages.select_option,
+            }),
+            {
+                required_error: formRequiredMessages.select_option,
+                invalid_type_error: formRequiredMessages.empty_multi_option,
+            }
+        )
+        .min(1, { message: formRequiredMessages.empty_multi_option }),
+    phoneNumber: z
+        .string({ invalid_type_error: formRequiredMessages.invalid_phone })
+        .refine((number) => isValidPhoneNumber(number), { message: formRequiredMessages.invalid_phone }),
+    ownerName: z.string({ invalid_type_error: formRequiredMessages.empty_string }),
+    domen: z
+        .array(
+            z.string().refine((str) => domens.some((domen) => domen.domain === str), {
+                message: formRequiredMessages.select_option,
+            }),
+            {
+                required_error: formRequiredMessages.select_option,
+                invalid_type_error: formRequiredMessages.empty_multi_option,
+            }
+        )
+        .min(1, { message: formRequiredMessages.empty_multi_option }),
+    companyName: z.string({ invalid_type_error: formRequiredMessages.empty_string }),
 });
 
 type TEditCompanyInfoSchemaType = z.infer<typeof editCompanyInfoSchema>;
 
 const EditCompanyInfo = () => {
-    const {
-        control,
-        register,
-        formState: { errors },
-    } = useFormContext<TEditCompanyInfoSchemaType>();
+    const { control } = useFormContext<TEditCompanyInfoSchemaType>();
 
     return (
         <>
             <Grid item xs={6}>
                 <FormInput
-                    register={register}
+                    control={control}
                     label="company title"
                     name="companyName"
-                    errorText={errors.companyName?.message?.toString()}
                     type="text"
                     helperText="Write the company title."
                 />
             </Grid>
             <Grid item xs={6}>
                 <FormInput
-                    register={register}
+                    control={control}
                     label="owner name"
                     name="ownerName"
-                    errorText={errors.ownerName?.message?.toString()}
                     type="text"
                     helperText="Write full name of company's owner."
                 />
@@ -81,14 +97,13 @@ const EditCompanyInfo = () => {
                     optionLabel="country"
                     options={countries}
                     helperText="Please input your current location in the designated field."
-                />
-            </Grid>
-            <Grid item xs={6}>
-                <PhoneInput
-                    control={control}
-                    name="phoneNumber"
-                    label="phone number"
-                    helperText="Please input your phone number in the designated field."
+                    multiple
+                    renderOption={(props, option) => (
+                        <Box component="li" {...props} display="flex" gap={1}>
+                            <img loading="lazy" src={option.flag} width={20} alt={option.code} />
+                            {option.country}
+                        </Box>
+                    )}
                 />
             </Grid>
             <Grid item xs={6}>
@@ -99,9 +114,17 @@ const EditCompanyInfo = () => {
                     optionLabel="domain"
                     options={domens}
                     helperText="Please input correct domen."
+                    multiple
                 />
             </Grid>
-            <Grid item xs={6}></Grid>
+            <Grid item xs={6}>
+                <PhoneInput
+                    control={control}
+                    name="phoneNumber"
+                    label="phone number"
+                    helperText="Please input your phone number in the designated field."
+                />
+            </Grid>
         </>
     );
 };

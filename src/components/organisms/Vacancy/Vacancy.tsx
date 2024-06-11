@@ -1,94 +1,126 @@
 // MUI
 import { Box, Button, Paper, Typography, styled } from "@mui/material";
 // MUI Icons
-import EmailIcon from "@mui/icons-material/Email";
-import ShareIcon from "@mui/icons-material/Share";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import SaveIcon from "@mui/icons-material/Save";
+import AttachEmailIcon from "@mui/icons-material/AttachEmail";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 // Components
-import Image from "components/atoms/Image/Image";
 import List from "components/molecules/List/List";
-import NavBadge from "components/atoms/NavBadge/NavBadge";
-import Viewer from "components/molecules/Viewer/Viewer";
 import JobCard from "components/molecules/JobCard/JobCard";
-// Assets
-import test from "assets/images/companies/Company-7.svg";
+import VacancyHeader from "./VacancyHeader";
+import Viewer from "components/molecules/Viewer/Viewer";
+import CandidatesList from "./CandidatesList";
+// Redux
+import { useApplyForVacancyMutation, useGetVacancyInfoQuery, useSaveVacancyMutation } from "app/slices/userSlice";
+import { useAppSelector } from "app/hooks";
+import { RootState } from "app/store";
+// Router
+import { useParams } from "react-router-dom";
+// Models
+import { USER_TYPE } from "models/user.model";
 
 const VacancyContent = styled(Paper)({
     boxShadow: "none",
     padding: "3rem",
-    height: "100%",
+    minHeight: "100%",
     borderRadius: "0 4px 4px 0",
 });
 
-const VacancyPosition = styled(Typography<"h3">)(({ theme }) => ({
-    ...theme.typography.h4,
-    fontWeight: theme.typography.fontWeightMedium,
-}));
+const Article = styled(Box)({
+    marginTop: "1.5rem",
+});
 
-const VacancyDetails = styled(Typography<"p">)(({ theme }) => ({
-    ...theme.typography.subtitle1,
-    color: theme.palette.grey[600],
+const StyledButton = styled(Button)(({ theme, variant }) => ({
+    "&:disabled": {
+        color: variant === "contained" ? theme.palette.success.main : theme.palette.info.main,
+        backgroundColor: "unset",
+        border: `1px solid ${variant === "contained" ? theme.palette.success.main : theme.palette.info.main}`,
+    },
 }));
-
-const VacancyHeader = () => {
-    return (
-        <Box display="flex" alignItems="flex-start" justifyContent="space-between">
-            <Box>
-                <VacancyPosition component="h3">Product Designer</VacancyPosition>
-                <Box display="flex" alignItems="center" gap={1}>
-                    <Box display="flex" gap={1} alignItems="center">
-                        <Image src={test} width={24} height={24} />
-                        <Typography variant="subtitle1">Grameenphone</Typography>
-                    </Box>
-                    <VacancyDetails component="p">Dhaka, Bangladesh</VacancyDetails>
-                </Box>
-                <VacancyDetails component="p">Posted on 15 May 20</VacancyDetails>
-            </Box>
-            <Box display="flex" gap={1} marginTop={1}>
-                <NavBadge name="Message" invisible>
-                    <EmailIcon />
-                </NavBadge>
-                <NavBadge name="Share" invisible>
-                    <ShareIcon />
-                </NavBadge>
-                <NavBadge name="More" invisible>
-                    <MoreHorizIcon />
-                </NavBadge>
-            </Box>
-        </Box>
-    );
-};
 
 const Vacancy = () => {
-    return (
-        <VacancyContent>
-            <VacancyHeader />
-            <Box display="flex" gap={2} marginBlock={4}>
-                <Button variant="contained">Apply</Button>
-                <Button variant="outlined">Save Job</Button>
-            </Box>
-            <Box>
-                <Viewer outlined variant="full" />
-            </Box>
-            <Box marginTop={4}>
-                <List label="Responsibilities" items={testInfo} />
-            </Box>
-            <Box marginTop={4}>
-                <List label="Preferred Qualifications and Skills" items={testInfo} type="numeric" />
-            </Box>
-            <Box marginBlock={4}>
-                <JobCard variant="view" outlined />
-            </Box>
-        </VacancyContent>
-    );
-};
+    const { id } = useParams<{ id: string }>();
+    const { data: info, isError, error } = useGetVacancyInfoQuery({ vacancyID: id! });
+    const user = useAppSelector((state: RootState) => state.user.currentUser);
+    const [saveVacancy] = useSaveVacancyMutation();
+    const [applyForVacancy] = useApplyForVacancyMutation();
 
-const testInfo = [
-    "Work on and execute design projects from start to finish while meeting creative and technical requirements.",
-    "Collaborate closely with engineers, researchers, clinicians and product managers to iterate rapidly.",
-    "Work on the entire project lifecycle, from wireframes to detailed specs across multiple UX platforms.",
-    "Participate in regular design reviews and other team-wide design efforts; create and contribute to a great design team culture.",
-    "Participate in user-experience research and usability studies.",
-];
+    if (isError) throw new Error(String(error));
+
+    if (info) {
+        const { supervisor, companyInfo, vacancyInfo } = info;
+
+        const isEmployee = user
+            ? user.uid !== vacancyInfo.userID &&
+              user.uid !== vacancyInfo.supervisor &&
+              user.accountType === USER_TYPE.EMPLOYEE
+            : true;
+
+        const isEmployeeSavedVacancy = user?.accountType === USER_TYPE.EMPLOYEE && user.savedVacancies.includes(id!);
+        const isAlreadyApplied = !!user && vacancyInfo.candidates.includes(user.uid);
+
+        const onSaveVacancy = async () => {
+            if (!user || user?.accountType === USER_TYPE.EMPLOYER) return;
+            await saveVacancy({ vacancyID: id!, userID: user.uid });
+        };
+
+        const onApplyForVacancy = async () => {
+            if (!user || user?.accountType === USER_TYPE.EMPLOYER) return;
+            await applyForVacancy({ vacancyID: id!, userID: user.uid });
+        };
+
+        const renderVacancyDetails = vacancyInfo.details.map(({ label, content }) => {
+            const detailsContent = content.map((item) => item.text);
+            return (
+                <Box marginTop={4}>
+                    <List label={label} items={detailsContent} />
+                </Box>
+            );
+        });
+
+        return (
+            <VacancyContent>
+                <VacancyHeader {...info} />
+                {isEmployee && (
+                    <Article display="flex" gap={2}>
+                        <StyledButton
+                            variant="contained"
+                            startIcon={isAlreadyApplied ? <ThumbUpIcon /> : <AttachEmailIcon />}
+                            onClick={onApplyForVacancy}
+                            disabled={isAlreadyApplied}
+                        >
+                            {isAlreadyApplied ? "You've already applied " : "Apply"}
+                        </StyledButton>
+                        <StyledButton
+                            variant="outlined"
+                            onClick={onSaveVacancy}
+                            disabled={isEmployeeSavedVacancy}
+                            startIcon={<SaveIcon />}
+                        >
+                            {isEmployeeSavedVacancy ? "Saved" : "Save Job"}
+                        </StyledButton>
+                    </Article>
+                )}
+                <Article>
+                    <Viewer outlined variant="full" {...supervisor} companyName={companyInfo.companyName!} />
+                </Article>
+                <Article>
+                    <Typography variant="body1" component="p" textAlign="justify">
+                        {vacancyInfo.description}
+                    </Typography>
+                </Article>
+                <Article>{renderVacancyDetails}</Article>
+                <Article>
+                    <JobCard variant="view" outlined {...vacancyInfo} {...companyInfo} />
+                </Article>
+                {!isEmployee && (
+                    <Article>
+                        <CandidatesList candidates={vacancyInfo.candidates} />
+                    </Article>
+                )}
+            </VacancyContent>
+        );
+    }
+};
 
 export default Vacancy;

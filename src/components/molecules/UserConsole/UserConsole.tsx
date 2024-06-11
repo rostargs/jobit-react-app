@@ -51,7 +51,7 @@ const UserConsole = () => {
         <ClickAwayListener onClickAway={onSetToNegative}>
             <Box position="relative">
                 <ConsoleButton onClick={onToggle} isActive={active}>
-                    <UserAvatar sx={{ width: 40, height: 40 }} userName="B" />
+                    <UserAvatar sx={{ width: 40, height: 40 }} userName="NAME" />
                     <UserName component="p">{modifiedUserName}</UserName>
                     {active ? <ExpandLess /> : <ExpandMore />}
                 </ConsoleButton>

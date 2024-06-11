@@ -9,15 +9,17 @@ import { useFormContext } from "react-hook-form";
 import z from "zod";
 // Data
 import { hierarchyLevels, positions } from "data/hierarchy";
+// Utils
+import { formContentLength, formRequiredMessages } from "utils/formSettings";
 
 export const positionSchema = z.object({
     position: z
-        .string({ invalid_type_error: "Choose correct option" })
-        .refine((str) => positions.some((pos) => pos.position === str)),
+        .string({ required_error: formRequiredMessages.select_option })
+        .refine((str) => positions.some((pos) => pos.position === str), { message: formRequiredMessages.select_option }),
     level: z
-        .string({ invalid_type_error: "Choose correct option" })
-        .refine((str) => hierarchyLevels.some((hr) => hr.level === str)),
-    role: z.string().trim().min(128).max(424),
+        .string({ required_error: formRequiredMessages.select_option })
+        .refine((str) => hierarchyLevels.some((hr) => hr.level === str), { message: formRequiredMessages.select_option }),
+    role: z.string().trim().min(formContentLength.min_description_length).max(formContentLength.max_description_length),
 });
 
 export type TPositionFormType = z.infer<typeof positionSchema>;

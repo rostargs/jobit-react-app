@@ -22,7 +22,7 @@ const searchUserSchema = z.object({
 type TSearchUserType = z.infer<typeof searchUserSchema>;
 
 const ChatRooms = () => {
-    const { register } = useForm<TSearchUserType>({ resolver: zodResolver(searchUserSchema) });
+    const { control } = useForm<TSearchUserType>({ resolver: zodResolver(searchUserSchema) });
 
     return (
         <Box>
@@ -37,7 +37,7 @@ const ChatRooms = () => {
             <Box paddingBlock={3}>
                 <form autoComplete="off">
                     <FormInput
-                        register={register}
+                        control={control}
                         placeholder="search by name"
                         name="userName"
                         type="text"

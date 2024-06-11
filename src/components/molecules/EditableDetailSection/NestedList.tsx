@@ -12,6 +12,7 @@ import { List, styled } from "@mui/material";
 const StyledList = styled(List)({
     listStyleType: "disc",
     marginLeft: "2rem",
+    padding: 0,
 });
 
 const NestedList = () => {

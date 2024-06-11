@@ -1,3 +1,5 @@
+// MUI
+import { Box } from "@mui/material";
 // Components
 import MyJobsNav from "components/organisms/MyJobsNav/MyJobsNav";
 // Router
@@ -7,9 +9,9 @@ const MyJobs = () => {
     return (
         <section>
             <MyJobsNav />
-            <article>
+            <Box component="article" marginTop={3}>
                 <Outlet />
-            </article>
+            </Box>
         </section>
     );
 };

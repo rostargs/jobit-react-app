@@ -6,7 +6,7 @@ import { AutocompleteProps } from "@mui/material";
 export type TAutocompleteInput<T extends FieldValues, Y extends Record<string, string>> = {
     name: keyof T & Path<T>;
     label?: string;
-    options: TAutocompleteInputOpition<Y>[];
+    options: Readonly<TAutocompleteInputOpition<Y>[]>;
     optionLabel: keyof Y;
     control: Control<T>;
     helperText?: string;

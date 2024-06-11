@@ -9,7 +9,7 @@ import { useRemoveStatItemMutation } from "app/slices/userSlice";
 import { RootState } from "app/store";
 // Components
 import ProfileBaseCard from "components/molecules/ProfileBaseCard/ProfileBaseCard";
-import ErrorNotificationt from "components/atoms/ErrorNotification/ErrorNotificationt";
+import ErrorNotification from "components/atoms/ErrorNotification/ErrorNotification";
 // Assets
 import emptyBox from "assets/images/errors/emptyBox.svg";
 
@@ -53,7 +53,7 @@ const ExperienceList = ({ onHandleError, onEdit }: TExperienceList) => {
     return isUserHasExperience ? (
         renderExperienceList
     ) : (
-        <ErrorNotificationt
+        <ErrorNotification
             image={emptyBox}
             errorMessage="You've never worked at all, but it doesn't matter 😊."
             buttonText="Add experience item"

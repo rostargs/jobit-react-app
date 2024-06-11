@@ -69,6 +69,7 @@ const Employee = () => {
                 position: null,
                 phoneNumber: null,
                 avatar: null,
+                currentJob: null,
             },
         });
         await setUser(userAuthInfo);

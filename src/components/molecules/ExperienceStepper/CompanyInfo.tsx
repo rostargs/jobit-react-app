@@ -10,12 +10,20 @@ import ImageInput from "components/atoms/ImageInput/ImageInput";
 import AutocompleteInput from "components/atoms/AutocompleteInput/AutocompleteInput";
 // Data
 import { countries } from "data/countries";
+// Utils
+import { formContentLength, formRequiredMessages } from "utils/formSettings";
 
 export const companyInfoSchema = z.object({
-    companyName: z.string().trim().min(3).max(18),
+    companyName: z
+        .string()
+        .trim()
+        .min(formContentLength.min_company_name_length)
+        .max(formContentLength.max_company_name_length),
     country: z
-        .string({ invalid_type_error: "Choose correct option." })
-        .refine((str) => countries.some((country) => country.country === str)),
+        .string({ required_error: formRequiredMessages.select_option })
+        .refine((str) => countries.some((country) => country.country === str), {
+            message: formRequiredMessages.select_option,
+        }),
     logo: z.instanceof(File),
 });
 

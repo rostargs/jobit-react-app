@@ -10,52 +10,101 @@ import AutocompleteInput from "components/atoms/AutocompleteInput/AutocompleteIn
 import ImageInput from "components/atoms/ImageInput/ImageInput";
 import EditableDetailSection from "components/molecules/EditableDetailSection/EditableDetailSection";
 // MUI
-import { Box, Grid, SpeedDial, SpeedDialAction } from "@mui/material";
+import { Box, Grid, SpeedDial, SpeedDialAction, Typography } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 // MUI Icons
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import PublishIcon from "@mui/icons-material/Publish";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 // Assets
 import test from "assets/images/maleUser.svg";
 // Data
-import { positions } from "data/hierarchy";
+import { hierarchyLevels, positions } from "data/hierarchy";
+import { technologies } from "data/technologies";
+import { countries } from "data/countries";
 // React
 import { useCallback, useEffect } from "react";
 // Utils
 import { getImageFile } from "utils/uploadImageMethods";
+import { formContentLength, formRequiredMessages } from "utils/formSettings";
+// Redux
+import { useAddCompanyVacancyMutation, useGetCompanyEmployeesQuery } from "app/slices/userSlice";
+import { useAppSelector } from "app/hooks";
+import { RootState } from "app/store";
+import { nanoid } from "@reduxjs/toolkit";
+// Models
+import { TEmployeeMainInfo, TEmployerUser } from "models/user.model";
+import { TUploadDataCompanyVacancy } from "models/company.model";
+// Router
+import { useNavigate } from "react-router-dom";
 
-const addVacancyFormSchema = z.object({
-    companyName: z.string(),
-    postDate: z.date(),
-    description: z.string(),
-    companyLogo: z.instanceof(File),
-    position: z
-        .string()
-        .refine((str) => positions.some((position) => position.position === str), { message: "Choose correct option." }),
-    details: z.array(
-        z.object({
-            label: z.string(),
-            content: z.array(z.object({ text: z.string() })),
-        })
-    ),
-});
+const addVacancyFormSchema = (employees: TEmployeeMainInfo[]) =>
+    z.object({
+        companyName: z.string(),
+        postDate: z.date(),
+        description: z
+            .string({ required_error: formRequiredMessages.empty_string })
+            .min(formContentLength.min_description_length)
+            .max(formContentLength.max_description_length),
+        companyLogo: z.instanceof(File),
+        position: z
+            .string({ required_error: formRequiredMessages.select_option })
+            .refine((str) => positions.some((position) => position.position === str), {
+                message: formRequiredMessages.select_option,
+            }),
+        details: z.array(
+            z.object({
+                label: z.string().min(formContentLength.min_label_length).max(formContentLength.max_label_length),
+                content: z.array(
+                    z.object({
+                        text: z
+                            .string()
+                            .min(formContentLength.min_list_item_length)
+                            .max(formContentLength.max_list_item_length),
+                    })
+                ),
+            })
+        ),
+        level: z
+            .string({ required_error: formRequiredMessages.select_option })
+            .refine((str) => hierarchyLevels.some((level) => level.level === str), {
+                message: formRequiredMessages.select_option,
+            }),
+        salary: z.number({ required_error: formRequiredMessages.invalid_number }).min(0).max(100_000),
+        skills: z.array(z.string()),
+        location: z.string({ required_error: formRequiredMessages.select_option }),
+        supervisor: z
+            .string()
+            .refine((str) => employees.some((employee) => employee.name === str), {
+                message: formRequiredMessages.select_option,
+            })
+            .optional(),
+    });
 
-type TAddVacancyFormType = z.infer<typeof addVacancyFormSchema>;
+export type TAddVacancyFormType = z.infer<ReturnType<typeof addVacancyFormSchema>>;
 
 const AddVacancyForm = () => {
+    const { uid } = useAppSelector((state: RootState) => state.user.currentUser as TEmployerUser);
+    const { data: employees = [], isFetching } = useGetCompanyEmployeesQuery({
+        userID: uid,
+        position: "Recruiting",
+    });
+    const [addCompanyVacancy] = useAddCompanyVacancyMutation();
+    const navigate = useNavigate();
     const methods = useForm<TAddVacancyFormType>({
-        resolver: zodResolver(addVacancyFormSchema),
+        resolver: zodResolver(addVacancyFormSchema(employees)),
         defaultValues: {
             companyName: "BOMJ",
             postDate: new Date(),
             details: [
                 {
                     label: "Responsibilities 📩:",
-                    content: [{ text: "Writing code!" }],
+                    content: [{ text: "Writing code every day and drink a lot of coffee 😂!" }],
                 },
             ],
+            location: "Ukraine",
         },
     });
     const { control, reset, handleSubmit } = methods;
@@ -66,8 +115,21 @@ const AddVacancyForm = () => {
         reset({ companyLogo: file });
     }, []);
 
-    const onSubmitVacancyForm: SubmitHandler<TAddVacancyFormType> = (data) => {
-        console.log(data);
+    const onSubmitVacancyForm: SubmitHandler<TAddVacancyFormType> = async (data) => {
+        const { companyLogo, companyName, supervisor, ...rest } = data;
+
+        const formatedData: TUploadDataCompanyVacancy = {
+            ...rest,
+            postDate: String(data.postDate),
+            userID: uid,
+            id: nanoid(),
+            supervisor: supervisor ? employees.find((employee) => employee.name === supervisor)!.uid : uid,
+            candidates: [],
+        };
+
+        await addCompanyVacancy(formatedData);
+        reset();
+        navigate(`/jobs/all/${formatedData.id}`);
     };
 
     useEffect(() => {
@@ -111,13 +173,87 @@ const AddVacancyForm = () => {
                             </Grid>
                         </Grid>
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={6}>
                         <AutocompleteInput
                             control={control}
                             label="choose position"
                             name="position"
                             options={positions}
                             optionLabel="position"
+                            helperText="Choose a vacancy position."
+                        />
+                    </Grid>
+                    <Grid item xs={6}>
+                        <AutocompleteInput
+                            control={control}
+                            label="choose technologies"
+                            name="skills"
+                            options={technologies}
+                            optionLabel="name"
+                            helperText="Choose required technologies."
+                            multiple
+                            renderOption={(params, { name, logo }) => (
+                                <Box component="li" {...params} display="flex" gap={1}>
+                                    <img src={logo} alt={name} width={20} />
+                                    {name}
+                                </Box>
+                            )}
+                        />
+                    </Grid>
+                    <Grid item xs={4}>
+                        <AutocompleteInput
+                            control={control}
+                            name="level"
+                            label="choose level"
+                            options={hierarchyLevels}
+                            optionLabel="level"
+                            helperText="Choose a knowledge level."
+                        />
+                    </Grid>
+                    <Grid item xs={4}>
+                        <FormInput
+                            control={control}
+                            name="salary"
+                            label="salary"
+                            helperText="Write a salary for this vacancy."
+                            type="number"
+                            inputMode="numeric"
+                            startAdornment={<AttachMoneyIcon />}
+                        />
+                    </Grid>
+                    <Grid item xs={4}>
+                        <AutocompleteInput
+                            control={control}
+                            name="location"
+                            label="location"
+                            options={countries}
+                            optionLabel="country"
+                            helperText="Choose location."
+                            renderOption={(props, option) => (
+                                <Box component="li" {...props} display="flex" gap={1}>
+                                    <img loading="lazy" src={option.flag} width={20} alt={option.code} />
+                                    {option.country}
+                                </Box>
+                            )}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <AutocompleteInput
+                            control={control}
+                            name="supervisor"
+                            options={employees}
+                            optionLabel="name"
+                            label="vacancy supervisor"
+                            helperText="Please, choose a vacancy supersisor (HR) - OPTIONAL."
+                            loading={isFetching}
+                            renderOption={(props, { name, avatar, position }) => (
+                                <Box component="li" {...props} display="flex" gap={3}>
+                                    <img loading="lazy" src={avatar} width={40} alt={name} />
+                                    <Typography variant="subtitle1" fontWeight="medium">
+                                        {name} - {position}
+                                    </Typography>
+                                </Box>
+                            )}
                         />
                     </Grid>
                     <Grid item xs={12}>
@@ -128,7 +264,7 @@ const AddVacancyForm = () => {
                             multiline
                             minRows={3}
                             type="text"
-                            placeholder="Write some information about vacancy"
+                            helperText="Write some information about vacancy"
                         />
                     </Grid>
                     <Grid item xs={12}>

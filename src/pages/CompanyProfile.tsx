@@ -87,7 +87,7 @@ const CompanyProfile = () => {
                 </Tabs>
             </Grid>
             <Grid item xs={12}>
-                <Outlet context={{ id: params.id }} />
+                <Outlet context={{ id: params.id! }} />
             </Grid>
         </Grid>
     );

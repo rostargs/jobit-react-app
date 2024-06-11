@@ -253,3 +253,16 @@ export const languages = [
         image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Flag_of_the_People%27s_Republic_of_China.svg/2560px-Flag_of_the_People%27s_Republic_of_China.png",
     },
 ];
+
+export const languageLevels = {
+    0.5: "Hello world!",
+    1: "Pre-Elementary",
+    1.5: "Elementary",
+    2: "Pre-Intermediate",
+    2.5: "Intermediate",
+    3: "Upper Intermediate",
+    3.5: "Pre-Advanced",
+    4: "Advanced",
+    4.5: "Advanced+",
+    5: "Native Speaker",
+};

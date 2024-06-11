@@ -15,7 +15,7 @@ const Wrapper = styled(Grid)(({ theme }) => ({
 
 const ScrollSection = styled(Grid)({
     height: "100vh",
-    maxHeight: 600,
+    maxHeight: "calc(100vh - 90px - 32px)",
     overflowY: "scroll",
     "::-webkit-scrollbar": {
         width: 0,

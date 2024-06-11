@@ -2,7 +2,7 @@
 import EditableStatSection from "components/molecules/EditableStatSection/EditableStatSection";
 import BenefitItem from "components/atoms/BenefitItem/BenefitItem";
 import BenefitForm from "components/molecules/BenefitForm/BenefitForm";
-import ErrorNotificationt from "components/atoms/ErrorNotification/ErrorNotificationt";
+import ErrorNotification from "components/atoms/ErrorNotification/ErrorNotification";
 // Assets
 import benefit from "assets/images/publicProfile/benefit.svg";
 import cantFind from "assets/images/errors/cantFind.svg";
@@ -44,7 +44,7 @@ const CompanyBenefitsList = ({ onHandleError }: TCompanyBenefitsList) => {
             {renderBenefitsList}
         </Grid>
     ) : (
-        <ErrorNotificationt
+        <ErrorNotification
             errorMessage="There is no benefits added yet 🤔."
             buttonText="Add benefit"
             image={cantFind}

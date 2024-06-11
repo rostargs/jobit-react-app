@@ -1,8 +1,8 @@
 // Components
 import EditableStatSection from "components/molecules/EditableStatSection/EditableStatSection";
 import ProfileSmallCard from "components/molecules/ProfileSmallCard/ProfileSmallCard";
-import ErrorNotificationt from "components/atoms/ErrorNotification/ErrorNotificationt";
-import LanguageForm, { TLanguageFormSchemaType, languageLevels } from "components/molecules/LanguageForm/LanguageForm";
+import ErrorNotification from "components/atoms/ErrorNotification/ErrorNotification";
+import LanguageForm, { TLanguageFormSchemaType } from "components/molecules/LanguageForm/LanguageForm";
 // Assets
 import languagesImage from "assets/images/publicProfile/language.svg";
 import planet from "assets/images/errors/planet.svg";
@@ -12,9 +12,9 @@ import { Grid, keyframes, styled } from "@mui/material";
 import { TEmployeeUser } from "models/user.model";
 import { TLanguagesList } from "./UserLanguages.model";
 // Data
-import { languages as allLang } from "data/languages";
+import { languages as allLang, languageLevels } from "data/languages";
 // React
-import { Fragment, useCallback, useRef } from "react";
+import { Fragment, useRef } from "react";
 // Redux
 import { useToggle } from "hooks/useToggle";
 import { useAppSelector } from "app/hooks";
@@ -44,33 +44,29 @@ const LanguagesList = ({ onHandleError, onEdit }: TLanguagesList) => {
 
     const isUserHasLanguages = !!languages.length;
 
-    const renderLanguagesList = useCallback(
-        () =>
-            languages.map(({ id, language, rating }) => {
-                const currentLang = allLang.find((lang) => lang.name === language);
-                return (
-                    <Grid item md={6} key={id}>
-                        <AnimationWrapper>
-                            <ProfileSmallCard
-                                title={language}
-                                subtitle={rating}
-                                onDelete={async () => await removeStatItem({ userID: uid, key: "languages", itemID: id })}
-                                onEdit={() => onEdit(id)}
-                                image={currentLang?.image}
-                            />
-                        </AnimationWrapper>
-                    </Grid>
-                );
-            }),
-        [languages]
-    );
+    const renderLanguagesList = languages.map(({ id, language, rating }) => {
+        const currentLang = allLang.find((lang) => lang.name === language);
+        return (
+            <Grid item md={6} key={id}>
+                <AnimationWrapper>
+                    <ProfileSmallCard
+                        title={language}
+                        subtitle={rating}
+                        onDelete={async () => await removeStatItem({ userID: uid, key: "languages", itemID: id })}
+                        onEdit={() => onEdit(id)}
+                        image={currentLang?.image}
+                    />
+                </AnimationWrapper>
+            </Grid>
+        );
+    });
 
     return isUserHasLanguages ? (
         <Grid container spacing={1}>
-            {renderLanguagesList()}
+            {renderLanguagesList}
         </Grid>
     ) : (
-        <ErrorNotificationt
+        <ErrorNotification
             image={planet}
             errorMessage="Please fill in the list of languages you speak 🌏."
             buttonText="Add language"

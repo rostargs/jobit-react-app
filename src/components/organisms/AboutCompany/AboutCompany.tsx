@@ -1,7 +1,7 @@
 // Components
 import EditableStatSection from "components/molecules/EditableStatSection/EditableStatSection";
 import EditableListItem from "components/atoms/EditableListItem/EditableListItem";
-import ErrorNotificationt from "components/atoms/ErrorNotification/ErrorNotificationt";
+import ErrorNotification from "components/atoms/ErrorNotification/ErrorNotification";
 // Assets
 import info from "assets/images/publicProfile/info.svg";
 import empty from "assets/images/errors/emptyBox.svg";
@@ -95,7 +95,7 @@ const ListItems = ({ fields, onDelete, isEditing, isDragging, onSwap }: TListIte
     return !!fields.length ? (
         <EditableList isDraggable={isDragging}>{renderEditableFields}</EditableList>
     ) : (
-        <ErrorNotificationt errorMessage="There is no information about your company 😒." image={empty} width={180} />
+        <ErrorNotification errorMessage="There is no information about your company 😒." image={empty} width={180} />
     );
 };
 

@@ -1,5 +1,7 @@
 // Models
-import { TEmployeeUser, TUsers } from "models/user.model";
+import { TUploadDataCompanyVacancy } from "models/company.model";
+import { TEmployeeUser, TEmployerMainInfo, TUsers, TUsersRefWithData } from "models/user.model";
+import { TPositionKeys } from "data/hierarchy";
 
 export type TUserSlice = {
     currentUser: TUsers | null;
@@ -44,3 +46,22 @@ type TMappedItemKey<T extends string> = {
 export type TRemoveCompanyItemProps<T extends string> = {
     userID: string;
 } & TMappedItemKey<T>;
+
+export type TGetCompanyVacancies = {
+    userID: string;
+    vacanciesLimit?: number;
+};
+
+export type TRequiredCompanyInfo = Pick<TEmployerMainInfo, "companyName" | "location" | "logo">;
+
+export type TPublicVacancies = TRequiredCompanyInfo & Pick<TUploadDataCompanyVacancy, "position" | "userID" | "id">;
+
+export type TVacancyInfo = {
+    companyInfo: TRequiredCompanyInfo;
+    vacancyInfo: TUploadDataCompanyVacancy;
+    supervisor: TUsersRefWithData;
+};
+
+export type TGetCompanyEmployees = {
+    userID: string;
+} & Partial<TPositionKeys>;

@@ -4,16 +4,26 @@ import { Box, Grid } from "@mui/material";
 import AutocompleteInput from "components/atoms/AutocompleteInput/AutocompleteInput";
 import FormInput from "components/atoms/FormInput/FormInput";
 import ImageInput from "components/atoms/ImageInput/ImageInput";
+// Data
 import { gradeLevels } from "data/gradeLevels";
+// Hook Form
 import { useFormContext } from "react-hook-form";
 // Zod
 import z from "zod";
+// Utils
+import { formContentLength, formRequiredMessages } from "utils/formSettings";
 
 export const universityInfoSchema = z.object({
-    universityTitle: z.string().min(6).max(48).trim(),
-    gradeLevel: z.string(),
+    universityTitle: z
+        .string()
+        .min(formContentLength.min_university_length)
+        .max(formContentLength.max_university_length)
+        .trim(),
+    gradeLevel: z
+        .string({ required_error: formRequiredMessages.select_option })
+        .refine((str) => gradeLevels.some((level) => level.grade === str), { message: formRequiredMessages.select_option }),
     logo: z.instanceof(File),
-    faculty: z.string().min(3).max(36),
+    faculty: z.string().min(formContentLength.min_faculty_length).max(formContentLength.max_faculty_length),
 });
 
 export type TUniversityInfoFormType = z.infer<typeof universityInfoSchema>;

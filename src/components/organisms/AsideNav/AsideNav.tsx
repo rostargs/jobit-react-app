@@ -29,15 +29,15 @@ const LinksContainer = styled(List)({
 
 const AsideNav = () => {
     const { currentUser } = useAppSelector((state: RootState) => state.user);
+
     const renderAsideLinks = asideNavigation.map((nav, index) => <NavIcon {...nav} key={index} />);
+
     return (
         <NavContainer component="aside">
             <Stack justifyContent="center">
                 <Logo />
             </Stack>
-            <Box marginBlock={4}>
-                {currentUser && <UserAvatar userName='default' withGreeting withActiveDot />}
-            </Box>
+            <Box marginBlock={4}>{currentUser && <UserAvatar userName="NAME" withGreeting withActiveDot />}</Box>
             <LinksContainer>{renderAsideLinks}</LinksContainer>
             <Box marginTop="auto">
                 <Share />

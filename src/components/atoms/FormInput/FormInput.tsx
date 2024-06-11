@@ -52,7 +52,11 @@ function FormInput<T extends FieldValues>({
                                     <InputAdornment position="end">{endAdornment}</InputAdornment>
                                 )
                             }
-                            onChange={onChange}
+                            onChange={(event) =>
+                                onChange(
+                                    type === "number" ? parseInt(event.currentTarget.value) : event.currentTarget.value
+                                )
+                            }
                             {...props}
                         />
                         <FormHelperText sx={{ position: "absolute", top: "100%" }}>

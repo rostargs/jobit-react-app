@@ -2,6 +2,7 @@
 import { Box, Paper, Stack, Typography, styled } from "@mui/material";
 // Router
 import { Link } from "react-router-dom";
+// Models
 import { TContentWrapper } from "./ContentWrapper.model";
 
 const Wrapper = styled(Paper)({

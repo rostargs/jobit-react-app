@@ -1297,4 +1297,6 @@ export const countries = [
         country: "Wales",
         code: "uk",
     },
-];
+] as const;
+
+export type TCountriesNames = (typeof countries)[number]["country"];

@@ -2,7 +2,7 @@
 import EditableStatSection from "components/molecules/EditableStatSection/EditableStatSection";
 import SkillForm, { TSkillFormSchemaType } from "components/molecules/SkillForm/SkillForm";
 import ProfileSmallCard from "components/molecules/ProfileSmallCard/ProfileSmallCard";
-import ErrorNotificationt from "components/atoms/ErrorNotification/ErrorNotificationt";
+import ErrorNotification from "components/atoms/ErrorNotification/ErrorNotification";
 // Assets
 import skills from "assets/images/publicProfile/skills.svg";
 // MUI
@@ -69,7 +69,7 @@ const SkillList = ({ onHandleError, onEdit }: TSkillList) => {
             {renderUserSkills}
         </Grid>
     ) : (
-        <ErrorNotificationt
+        <ErrorNotification
             errorMessage="Unfortunately, you do not currently have any specialised skills to display 😑."
             image={sadMail}
             buttonText="Add skill item"
