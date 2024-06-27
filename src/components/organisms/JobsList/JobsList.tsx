@@ -13,8 +13,13 @@ import {
 import { useGetVacanciesQuery } from "app/slices/userSlice";
 // Components
 import JobCard from "components/molecules/JobCard/JobCard";
+import { useFilterVacancies } from "hooks/useFilterVacancies";
 // React
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useState } from "react";
+// Router
+import { useParams } from "react-router-dom";
+// Utils
+import { getVacancyPage } from "utils/getVacancyPage";
 // Constants
 const VACANCIES_PER_PAGE = 4;
 
@@ -50,7 +55,12 @@ const SwithControl = styled(FormControlLabel)(({ theme }) => ({
 
 const JobsList = () => {
     const [page, setPage] = useState(1);
-    const { data: vacancies = [] } = useGetVacanciesQuery();
+    const { getCurrentParams } = useFilterVacancies();
+    const { id } = useParams<{ id: string }>();
+    const { data: vacancies = [] } = useGetVacanciesQuery({
+        filters: getCurrentParams(),
+        limitPerPage: VACANCIES_PER_PAGE,
+    });
 
     const totalVacancies = vacancies.length;
     const pageCount = Math.ceil(totalVacancies / VACANCIES_PER_PAGE);
@@ -59,9 +69,19 @@ const JobsList = () => {
         setPage(value);
     };
 
+    const getPageOnMount = useCallback(async () => {
+        if (!id) return;
+        const page = await getVacancyPage(id, VACANCIES_PER_PAGE);
+        page && setPage(page);
+    }, []);
+
     const renderJobsVacancies = vacancies.map((requiredInfo, index) => (
         <JobCard key={index} {...requiredInfo} variant="default" outlined />
     ));
+
+    useEffect(() => {
+        getPageOnMount();
+    }, []);
 
     return (
         <ListContainer>

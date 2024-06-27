@@ -1,23 +1,21 @@
 // MUI
-import { Box, Button, Paper, Typography, styled } from "@mui/material";
-// MUI Icons
-import SaveIcon from "@mui/icons-material/Save";
-import AttachEmailIcon from "@mui/icons-material/AttachEmail";
-import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import { Paper, Typography, styled } from "@mui/material";
 // Components
 import List from "components/molecules/List/List";
 import JobCard from "components/molecules/JobCard/JobCard";
 import VacancyHeader from "./VacancyHeader";
 import Viewer from "components/molecules/Viewer/Viewer";
 import CandidatesList from "./CandidatesList";
+import VacancyControls from "./VacancyControls";
+import VacancySkeleton from "components/skeletons/VacancySkeleton/VacancySkeleton";
 // Redux
-import { useApplyForVacancyMutation, useGetVacancyInfoQuery, useSaveVacancyMutation } from "app/slices/userSlice";
-import { useAppSelector } from "app/hooks";
-import { RootState } from "app/store";
+import { useGetVacancyInfoQuery } from "app/slices/userSlice";
 // Router
 import { useParams } from "react-router-dom";
 // Models
 import { USER_TYPE } from "models/user.model";
+// Hooks
+import { useVacancy } from "hooks/useVacancy";
 
 const VacancyContent = styled(Paper)({
     boxShadow: "none",
@@ -26,101 +24,52 @@ const VacancyContent = styled(Paper)({
     borderRadius: "0 4px 4px 0",
 });
 
-const Article = styled(Box)({
-    marginTop: "1.5rem",
+const VacancyDetails = styled("article")({
+    marginBlock: "1.5rem",
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    gap: "1.5rem",
 });
 
-const StyledButton = styled(Button)(({ theme, variant }) => ({
-    "&:disabled": {
-        color: variant === "contained" ? theme.palette.success.main : theme.palette.info.main,
-        backgroundColor: "unset",
-        border: `1px solid ${variant === "contained" ? theme.palette.success.main : theme.palette.info.main}`,
-    },
+const VacancyDescription = styled(Typography)(({ theme }) => ({
+    ...theme.typography.body1,
+    textAlign: "justify",
 }));
 
 const Vacancy = () => {
     const { id } = useParams<{ id: string }>();
-    const { data: info, isError, error } = useGetVacancyInfoQuery({ vacancyID: id! });
-    const user = useAppSelector((state: RootState) => state.user.currentUser);
-    const [saveVacancy] = useSaveVacancyMutation();
-    const [applyForVacancy] = useApplyForVacancyMutation();
+    const { data: info, isError, error, isLoading } = useGetVacancyInfoQuery({ vacancyID: id! });
+    const { user } = useVacancy({ vacancyID: id! });
 
-    if (isError) throw new Error(String(error));
+    if (isLoading) return <VacancySkeleton />;
 
-    if (info) {
-        const { supervisor, companyInfo, vacancyInfo } = info;
+    if (isError || !info) throw new Error(String(error));
 
-        const isEmployee = user
-            ? user.uid !== vacancyInfo.userID &&
-              user.uid !== vacancyInfo.supervisor &&
-              user.accountType === USER_TYPE.EMPLOYEE
-            : true;
+    const { supervisor, companyInfo, vacancyInfo } = info;
 
-        const isEmployeeSavedVacancy = user?.accountType === USER_TYPE.EMPLOYEE && user.savedVacancies.includes(id!);
-        const isAlreadyApplied = !!user && vacancyInfo.candidates.includes(user.uid);
+    const isEmployee = user
+        ? user.uid !== vacancyInfo.userID && user.uid !== vacancyInfo.supervisor && user.accountType === USER_TYPE.EMPLOYEE
+        : true;
 
-        const onSaveVacancy = async () => {
-            if (!user || user?.accountType === USER_TYPE.EMPLOYER) return;
-            await saveVacancy({ vacancyID: id!, userID: user.uid });
-        };
+    const renderVacancyDetails = vacancyInfo.details.map(({ label, content }, index) => {
+        const detailsContent = content.map((item) => item.text);
+        return <List label={label} items={detailsContent} key={index} />;
+    });
 
-        const onApplyForVacancy = async () => {
-            if (!user || user?.accountType === USER_TYPE.EMPLOYER) return;
-            await applyForVacancy({ vacancyID: id!, userID: user.uid });
-        };
-
-        const renderVacancyDetails = vacancyInfo.details.map(({ label, content }) => {
-            const detailsContent = content.map((item) => item.text);
-            return (
-                <Box marginTop={4}>
-                    <List label={label} items={detailsContent} />
-                </Box>
-            );
-        });
-
-        return (
-            <VacancyContent>
-                <VacancyHeader {...info} />
-                {isEmployee && (
-                    <Article display="flex" gap={2}>
-                        <StyledButton
-                            variant="contained"
-                            startIcon={isAlreadyApplied ? <ThumbUpIcon /> : <AttachEmailIcon />}
-                            onClick={onApplyForVacancy}
-                            disabled={isAlreadyApplied}
-                        >
-                            {isAlreadyApplied ? "You've already applied " : "Apply"}
-                        </StyledButton>
-                        <StyledButton
-                            variant="outlined"
-                            onClick={onSaveVacancy}
-                            disabled={isEmployeeSavedVacancy}
-                            startIcon={<SaveIcon />}
-                        >
-                            {isEmployeeSavedVacancy ? "Saved" : "Save Job"}
-                        </StyledButton>
-                    </Article>
-                )}
-                <Article>
-                    <Viewer outlined variant="full" {...supervisor} companyName={companyInfo.companyName!} />
-                </Article>
-                <Article>
-                    <Typography variant="body1" component="p" textAlign="justify">
-                        {vacancyInfo.description}
-                    </Typography>
-                </Article>
-                <Article>{renderVacancyDetails}</Article>
-                <Article>
-                    <JobCard variant="view" outlined {...vacancyInfo} {...companyInfo} />
-                </Article>
-                {!isEmployee && (
-                    <Article>
-                        <CandidatesList candidates={vacancyInfo.candidates} />
-                    </Article>
-                )}
-            </VacancyContent>
-        );
-    }
+    return (
+        <VacancyContent>
+            <VacancyHeader {...info} />
+            <VacancyDetails>
+                {isEmployee && <VacancyControls vacancyID={id!} vacancyInfo={vacancyInfo} />}
+                <Viewer outlined variant="full" {...supervisor} companyName={companyInfo.companyName!} />
+                <VacancyDescription>{vacancyInfo.description}</VacancyDescription>
+                {renderVacancyDetails}
+                <JobCard variant="view" outlined {...vacancyInfo} {...companyInfo} />
+                {!isEmployee && <CandidatesList candidates={vacancyInfo.candidates} vacancyID={id!} />}
+            </VacancyDetails>
+        </VacancyContent>
+    );
 };
 
 export default Vacancy;

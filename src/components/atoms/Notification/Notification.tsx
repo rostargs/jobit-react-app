@@ -13,7 +13,17 @@ import test from "assets/images/companies/Company-7.svg";
 // Router
 import { Link } from "react-router-dom";
 // Models
-import { TNotification, TNotificationVariantsKeys } from "./Notification.model";
+import {
+    TAppliedNotificationVariant,
+    TMessageNotificationVariant,
+    TNotification,
+    TNotificationVariantsKeys,
+    TRejectedNotificationVariant,
+    TVacancyNotificationVariant,
+    TViewNotificationVariant,
+} from "./Notification.model";
+import { useReplyToVacancyMutation } from "app/slices/userSlice";
+import { CandidateStatus } from "models/company.model";
 
 const NotificationCard = styled(Card)(({ theme }) => ({
     position: "relative",
@@ -71,7 +81,7 @@ const Message = styled(Typography)(({ theme }) => ({
     ...theme.typography.body1,
 }));
 
-const ViewVariant = () => {
+const ViewVariant = ({ viewerName, userID }: TViewNotificationVariant) => {
     return (
         <>
             <Message>
@@ -82,7 +92,7 @@ const ViewVariant = () => {
     );
 };
 
-const AppliedVariant = () => {
+const AppliedVariant = ({ vacancyID, date }: TAppliedNotificationVariant) => {
     return (
         <>
             <Message>
@@ -98,7 +108,7 @@ const AppliedVariant = () => {
     );
 };
 
-const RejectedVariant = () => {
+const RejectedVariant = ({ vacancyID, date }: TRejectedNotificationVariant) => {
     return (
         <>
             <Message>
@@ -114,21 +124,32 @@ const RejectedVariant = () => {
     );
 };
 
-const VacancyVariant = () => {
+const VacancyVariant = ({ vacancyID, candidateID }: TVacancyNotificationVariant) => {
+    const [replyToVacancy] = useReplyToVacancyMutation();
     return (
         <>
             <Message>
                 <b>Rostislav Savelko</b> applied for the vacancy
             </Message>
             <ButtonGroup sx={{ marginTop: "0.25rem", maxWidth: "300px" }} fullWidth size="small">
-                <Button color="success">Apply</Button>
-                <Button color="warning">Reject</Button>
+                <Button
+                    color="success"
+                    onClick={async () => await replyToVacancy({ candidateID, vacancyID, status: CandidateStatus.APPLIED })}
+                >
+                    Apply
+                </Button>
+                <Button
+                    color="warning"
+                    onClick={async () => await replyToVacancy({ candidateID, vacancyID, status: CandidateStatus.REJECTED })}
+                >
+                    Reject
+                </Button>
             </ButtonGroup>
         </>
     );
 };
 
-const MessageVariant = () => {
+const MessageVariant = ({ senderName, roomID, uid, message }: TMessageNotificationVariant) => {
     return (
         <>
             <Message>
@@ -144,16 +165,19 @@ const MessageVariant = () => {
     );
 };
 
-const Notification = ({ variant }: TNotification) => {
-    const notificationVariants: Record<TNotificationVariantsKeys, JSX.Element> = {
-        view: <ViewVariant />,
-        applied: <AppliedVariant />,
-        rejected: <RejectedVariant />,
-        vacancy: <VacancyVariant />,
-        message: <MessageVariant />,
+const Notification = ({ variant, isRead, id, ...rest }: TNotification) => {
+    const getNotificationVariant = (props: any) => {
+        const notificationVariants: Record<TNotificationVariantsKeys, JSX.Element> = {
+            view: <ViewVariant {...props} />,
+            applied: <AppliedVariant {...props} />,
+            rejected: <RejectedVariant {...props} />,
+            vacancy: <VacancyVariant {...props} />,
+            message: <MessageVariant {...props} />,
+        };
+        return notificationVariants[variant];
     };
 
-    const currentVariant = notificationVariants[variant];
+    const currentVariant = getNotificationVariant(rest);
 
     return (
         <NotificationCard elevation={2}>
@@ -161,7 +185,7 @@ const Notification = ({ variant }: TNotification) => {
                 <Box display="flex" alignItems="flex-start">
                     <Image src={test} width={48} height={48} />
                 </Box>
-                <Box>{currentVariant} </Box>
+                <Box>{currentVariant}</Box>
             </StyledCardContent>
             <Dot />
             <NotificationControls id="controls">

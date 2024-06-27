@@ -1,11 +1,18 @@
 // Model
-import { TViewer, TViewerCardProps, TViewerVariantProps } from "./Viewer.model";
+import { TViewer, TViewerCardProps, TViewerVariantProps, TViewerVariants } from "./Viewer.model";
+import { CandidateStatus } from "models/company.model";
 // MUI
 import { Box, Button, ButtonGroup, Card, CardContent, Typography, styled } from "@mui/material";
+// MUI Icons
+import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import GppBadIcon from "@mui/icons-material/GppBad";
 // Router
 import { Link } from "react-router-dom";
 // Components
 import UserAvatar from "components/atoms/UserAvatar/UserAvatar";
+import NavBadge from "components/atoms/NavBadge/NavBadge";
+// Redux
+import { useReplyToVacancyMutation } from "app/slices/userSlice";
 
 const ViewerCard = styled(Card, { shouldForwardProp: (prop) => prop !== "isOutlined" })<TViewerCardProps>(
     ({ theme, isOutlined }) => ({
@@ -52,13 +59,46 @@ const MessageVariant = ({ buttonText = "Send message" }: TViewerVariantProps) =>
     );
 };
 
-const VacancyVariant = () => {
+const VacancyVariant = ({ candidateID, vacancyID, status }: TViewerVariants["vacancy"]) => {
+    const [replyToVacancy] = useReplyToVacancyMutation();
+
+    const statusVariants = {
+        [CandidateStatus.APPLIED]: (
+            <NavBadge name="Applied" invisible>
+                <AssignmentTurnedInIcon color="success" />
+            </NavBadge>
+        ),
+        [CandidateStatus.REJECTED]: (
+            <NavBadge name="Rejected" invisible>
+                <GppBadIcon color="error" />
+            </NavBadge>
+        ),
+    };
+
     return (
         <Box display="flex" position="absolute" right={16}>
-            <ButtonGroup>
-                <Button>Apply</Button>
-                <Button color="warning">Deny</Button>
-            </ButtonGroup>
+            {status ? (
+                statusVariants[status]
+            ) : (
+                <ButtonGroup>
+                    <Button
+                        color="success"
+                        onClick={async () =>
+                            await replyToVacancy({ candidateID, vacancyID, status: CandidateStatus.APPLIED })
+                        }
+                    >
+                        Apply
+                    </Button>
+                    <Button
+                        color="warning"
+                        onClick={async () =>
+                            await replyToVacancy({ candidateID, vacancyID, status: CandidateStatus.REJECTED })
+                        }
+                    >
+                        Deny
+                    </Button>
+                </ButtonGroup>
+            )}
         </Box>
     );
 };
@@ -75,14 +115,18 @@ const Viewer = ({
     avatar,
     name,
     ownerName,
+    ...rest
 }: TViewer) => {
-    const viewerVariants = {
-        short: <ViewVariant buttonText={buttonText} />,
-        full: <MessageVariant buttonText={buttonText} />,
-        vacancy: <VacancyVariant />,
+    const getViewerVariant = (props: any) => {
+        const viewerVariants = {
+            short: <ViewVariant buttonText={buttonText} />,
+            full: <MessageVariant buttonText={buttonText} />,
+            vacancy: <VacancyVariant {...props} />,
+        };
+        return viewerVariants[variant];
     };
 
-    const currentVariant = viewerVariants[variant];
+    const currentVariant = getViewerVariant(rest);
 
     return (
         <ViewerCard isOutlined={outlined}>

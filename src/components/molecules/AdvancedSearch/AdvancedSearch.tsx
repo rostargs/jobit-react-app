@@ -1,11 +1,11 @@
 // MUI
-import { ClickAwayListener, IconButton, InputAdornment, Grow, styled, Paper } from "@mui/material";
+import { ClickAwayListener, IconButton, InputAdornment, styled, Paper } from "@mui/material";
 // MUI Icons
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 // Model
 import { SearchTypes, TAdvancedSearch, TSearchMenuProps } from "./Search.model";
 // React
-import { useState } from "react";
+import { useCallback, useState } from "react";
 // MUI Icons
 import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -14,9 +14,13 @@ import RecentSearch from "./RecentSearch";
 import SearchOptions from "./SearchOptions";
 import FormInput from "components/atoms/FormInput/FormInput";
 // Hook Form
-import { useForm } from "react-hook-form";
+import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
 // Hooks
 import { useToggle } from "hooks/useToggle";
+import { useFilterVacancies } from "hooks/useFilterVacancies";
+// Zod
+import z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const INPUT_WIDTH = 520;
 
@@ -28,22 +32,42 @@ const Form = styled("form")({
     justifyContent: "center",
 });
 
-const SearchMenu = styled(Paper, { shouldForwardProp: (prop) => prop !== "headerHeight" })<TSearchMenuProps>(
-    ({ theme, headerHeight }) => ({
-        position: "absolute",
-        maxWidth: INPUT_WIDTH + 32,
-        width: "110%",
-        top: "-1rem",
-        borderRadius: "0.5rem",
-        boxShadow: theme.shadows[5],
-        padding: `${headerHeight}px 1rem 1rem 1rem`,
-    })
-);
+const SearchMenu = styled(Paper, {
+    shouldForwardProp: (prop) => prop !== "headerHeight" && prop !== "isActive",
+})<TSearchMenuProps>(({ theme, headerHeight, isActive }) => ({
+    position: "absolute",
+    maxWidth: INPUT_WIDTH + 32,
+    width: "110%",
+    top: "-1rem",
+    borderRadius: "0.5rem",
+    boxShadow: theme.shadows[5],
+    padding: `${headerHeight}px 1rem 1rem 1rem`,
+    visibility: "hidden",
+    opacity: 0,
+    transition: "all 0.2s ease-in",
+
+    ...(isActive && { visibility: "visible", opacity: 1 }),
+}));
+
+const searchOptionsSchema = z.object({
+    location: z.string().optional(),
+    level: z.string().optional(),
+    position: z.string().optional(),
+    search: z.string().optional(),
+});
+
+export type TSearchOptionsType = z.infer<typeof searchOptionsSchema>;
 
 const AdvancedSearch = ({ headerHeight }: TAdvancedSearch) => {
     const { active, onSetToNegative, onSetToPositive } = useToggle(false);
+    const { getCurrentParams, onSubmitSearchParams } = useFilterVacancies();
     const [searchType, setSearchType] = useState<SearchTypes>(SearchTypes.RECENT);
-    const { control } = useForm();
+    const methods = useForm<TSearchOptionsType>({
+        resolver: zodResolver(searchOptionsSchema),
+        defaultValues: { ...getCurrentParams() },
+    });
+
+    const { control, handleSubmit } = methods;
 
     const onClickAway = (event: globalThis.MouseEvent | globalThis.TouchEvent) => {
         const targetElement = event.target as HTMLElement;
@@ -55,12 +79,17 @@ const AdvancedSearch = ({ headerHeight }: TAdvancedSearch) => {
         onSetToNegative();
     };
 
-    const onChangeTypeToAdvance = () => {
+    const onChangeTypeToAdvance = useCallback(() => {
         setSearchType(SearchTypes.OPTIONS);
-    };
+    }, [searchType]);
 
     const onChangeTypeToRecent = () => {
         setSearchType(SearchTypes.RECENT);
+    };
+
+    const onSearch: SubmitHandler<TSearchOptionsType> = (data) => {
+        onSubmitSearchParams(data);
+        onSetToNegative();
     };
 
     const endAdornment = active ? (
@@ -84,13 +113,12 @@ const AdvancedSearch = ({ headerHeight }: TAdvancedSearch) => {
 
     return (
         <ClickAwayListener onClickAway={onClickAway}>
-            <Form>
+            <Form autoComplete="off" onSubmit={handleSubmit(onSearch)}>
                 <FormInput
-                    autoComplete="off"
                     type="text"
-                    placeholder="search job title or skill"
+                    placeholder="search job by skill tag"
                     startAdornment={
-                        <IconButton disableRipple>
+                        <IconButton disableRipple type="submit">
                             <SearchRoundedIcon />
                         </IconButton>
                     }
@@ -100,9 +128,11 @@ const AdvancedSearch = ({ headerHeight }: TAdvancedSearch) => {
                     endAdornment={endAdornment}
                     onFocus={onSetToPositive}
                 />
-                <Grow in={active}>
-                    <SearchMenu headerHeight={headerHeight}>{searchVariants[searchType]}</SearchMenu>
-                </Grow>
+                <FormProvider {...methods}>
+                    <SearchMenu headerHeight={headerHeight} isActive={active}>
+                        {searchVariants[searchType]}
+                    </SearchMenu>
+                </FormProvider>
             </Form>
         </ClickAwayListener>
     );

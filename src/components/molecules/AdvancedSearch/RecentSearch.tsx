@@ -5,6 +5,8 @@ import SkillTag from "components/atoms/SkillTag/SkillTag";
 import SearchRequest from "components/atoms/SearchRequest/SearchRequest";
 // Model
 import { TRecentSearch } from "./Search.model";
+// React
+import { memo } from "react";
 
 const SearchSubtitle = styled(Typography<"h6">)(({ theme }) => ({
     ...theme.typography.subtitle1,
@@ -44,4 +46,4 @@ const RecentSearch = ({ toggleMode }: TRecentSearch) => {
     );
 };
 
-export default RecentSearch;
+export default memo(RecentSearch);

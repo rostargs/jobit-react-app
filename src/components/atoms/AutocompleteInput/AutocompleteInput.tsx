@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { TAutocompleteInput } from "./AutocompleteInput.model";
 // MUI
 import { Autocomplete, FormControl, FormHelperText, TextField, styled, autocompleteClasses } from "@mui/material";
@@ -24,7 +25,7 @@ const Content = styled(FormControl)(({ theme, error }) => ({
 function AutocompleteInput<T extends FieldValues, Y extends Record<string, string>>({
     name,
     label,
-    options = [], // Default to empty array
+    options = [],
     control,
     helperText,
     optionLabel,
@@ -35,18 +36,22 @@ function AutocompleteInput<T extends FieldValues, Y extends Record<string, strin
             name={name}
             control={control}
             render={({ field: { onChange, onBlur, ref, value }, fieldState: { error } }) => {
-                const currentValue = options.find((option) => option[optionLabel] === value) || undefined;
+                const currentValue = options.find((option) => option[optionLabel] === value) || "";
 
                 return (
                     <Content error={!!error?.message} fullWidth>
                         <Autocomplete
                             disablePortal
-                            //@ts-ignore
-                            defaultValue={currentValue}
-                            onChange={(_, newValue) =>
-                                //@ts-ignore
-                                onChange(rest.multiple ? newValue?.map((item) => item[optionLabel]) || [] : newValue ? newValue[optionLabel]: null)
-                            }
+                            value={currentValue}
+                            onChange={(_, newValue, reason) => {
+                                if (reason === "clear") onChange("");
+
+                                onChange(
+                                    rest.multiple
+                                        ? newValue?.map((item) => item[optionLabel]) || []
+                                        : newValue?.[optionLabel] || ""
+                                );
+                            }}
                             onInputChange={(_, inputValue) => onChange(inputValue)}
                             id={name}
                             options={options}

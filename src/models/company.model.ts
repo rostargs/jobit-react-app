@@ -20,8 +20,14 @@ export type TUploadDataCompanyVacancy = Omit<
 };
 
 export enum CandidateStatus {
-    APPLIED = "APPLIED",
-    REJECTED = "REJECTED",
+    APPLIED = "applied",
+    REJECTED = "rejected",
 }
 
 export type TCandidateInfo = TEmployeeRefWithData & { status: CandidateStatus | null };
+
+export type TReplyToVacancyParams = {
+    vacancyID: string;
+    candidateID: string;
+    status: CandidateStatus | null;
+};

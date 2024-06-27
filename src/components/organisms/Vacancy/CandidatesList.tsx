@@ -7,17 +7,20 @@ import { useGetVacancyCandidatesInfoQuery } from "app/slices/userSlice";
 // Components
 import Viewer from "components/molecules/Viewer/Viewer";
 
-const CandidatesList = ({ candidates }: TCandidatesList) => {
+const CandidatesList = ({ candidates, vacancyID }: TCandidatesList) => {
     const { data: candidatesData = [] } = useGetVacancyCandidatesInfoQuery(candidates);
 
-    const renderCandidates = candidatesData.map((candidate, index) => (
-        <>
-            <ListItem key={candidate.uid} disablePadding>
-                <Viewer {...candidate} variant="vacancy" />
-            </ListItem>
-            {++index !== candidatesData.length && <Divider />}
-        </>
-    ));
+    const renderCandidates = candidatesData.map((candidate, index) => {
+        const { uid } = candidate;
+        return (
+            <>
+                <ListItem key={uid} disablePadding>
+                    <Viewer {...candidate} variant="vacancy" vacancyID={vacancyID} candidateID={uid} />
+                </ListItem>
+                {++index !== candidatesData.length && <Divider />}
+            </>
+        );
+    });
 
     return (
         <Box>

@@ -114,7 +114,7 @@ function EditableListItem<T extends FieldValues>({
                 return (
                     <StyledListItem isError={isError} {...listItemProps} datatype-index={index}>
                         <Input
-                            onChange={(e) => onChange(removeWhiteSpace(e.target.value))}
+                            onChange={(e) => onChange(removeWhiteSpace(e.target.value, 1))}
                             value={value}
                             multiline
                             fullWidth

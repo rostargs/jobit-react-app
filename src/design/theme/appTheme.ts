@@ -33,6 +33,13 @@ const appTheme = createTheme({
     breakpoints: {
         values: defaultBreakpoins,
     },
+    components: {
+        MuiSkeleton: {
+            defaultProps: {
+                animation: "wave",
+            },
+        },
+    },
 });
 
 export default responsiveFontSizes(appTheme);

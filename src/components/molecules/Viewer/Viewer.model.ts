@@ -1,4 +1,5 @@
 // Models
+import { TReplyToVacancyParams } from "models/company.model";
 import { TEmployeeUser, TEmployerUser } from "models/user.model";
 
 export type TViewer = {
@@ -22,10 +23,10 @@ type TViewerTypeProps =
     | (TEmployeeViewer & TDisableViewer<TEmployerViewer> & TBaseViewerProps)
     | (TEmployerViewer & TDisableViewer<TEmployeeViewer> & TBaseViewerProps);
 
-type TViewerVariants = {
+export type TViewerVariants = {
     short: {};
     full: {};
-    vacancy: {};
+    vacancy: TReplyToVacancyParams
 };
 
 type TDisableViewer<T extends TEmployeeViewer | TEmployerViewer> = Partial<Record<keyof T, never>>;

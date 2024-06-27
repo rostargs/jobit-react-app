@@ -11,4 +11,4 @@ export type TRecentSearch = {
     toggleMode: () => void;
 };
 
-export type TSearchMenuProps = TAdvancedSearch;
+export type TSearchMenuProps = TAdvancedSearch & {isActive: boolean};

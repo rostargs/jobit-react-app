@@ -11,6 +11,7 @@ import {
 import { TCountriesNames } from "data/countries";
 import { TDomensValues } from "data/domens";
 import { TGendersValues } from "data/genders";
+import { TNotificationTypes } from "components/atoms/Notification/Notification.model";
 
 // User Variants
 export enum USER_TYPE {
@@ -23,6 +24,7 @@ export type TEmployerUser = {
     uid: string;
     chats: TRoomReference[];
     benefits: TUploadDataCompanyBenefits[];
+    notifications: TNotificationTypes[];
 } & TAuthEmployerVariant;
 
 export type TAuthEmployerVariant = {
@@ -51,6 +53,7 @@ export type TEmployeeUser = {
     languages: TUploadDataResumeLanguage[];
     chats: TRoomReference[];
     savedVacancies: string[];
+    notifications: TNotificationTypes[];
 } & TAuthEmployeeVariant;
 
 export type TAuthEmployeeVariant = {

@@ -1,9 +1,11 @@
 // Redux
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice, nanoid } from "@reduxjs/toolkit";
 // API
 import { firebaseApi } from "app/api/firebaseApi";
 // Firebase
 import {
+    DocumentData,
+    Query,
     QueryConstraint,
     collection,
     doc,
@@ -17,8 +19,9 @@ import {
 } from "firebase/firestore";
 // Firebase Config
 import { firestore, storage } from "../../firebaseConfig";
-// Model
+// Models
 import {
+    TEmployeeMainInfo,
     TEmployeeRefWithData,
     TEmployeeUser,
     TEmployerUser,
@@ -26,7 +29,13 @@ import {
     TUsersRefWithData,
     USER_TYPE,
 } from "models/user.model";
-import { TCandidateInfo, TUploadDataCompanyBenefits, TUploadDataCompanyVacancy } from "models/company.model";
+import {
+    CandidateStatus,
+    TCandidateInfo,
+    TReplyToVacancyParams,
+    TUploadDataCompanyBenefits,
+    TUploadDataCompanyVacancy,
+} from "models/company.model";
 import {
     TAddCompanyItemProps,
     TAddUpdateStatOperation,
@@ -40,8 +49,12 @@ import {
     TUserSlice,
     TVacancyInfo,
 } from "app/types/userSlice.model";
+import { TSearchOptionsType } from "components/molecules/AdvancedSearch/AdvancedSearch";
 // Utils
 import { getUserDataByID, uploadImageIntoStorage } from "utils/firebaseOperations";
+import { sendNotification } from "utils/notificationOperations";
+import { createFiltersQuery } from "utils/createFiltersQuery";
+import { filterVacanciesBySkillTag } from "utils/filterVacanciesBySkillTag";
 
 const initialState: TUserSlice = {
     currentUser: null,
@@ -257,19 +270,47 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
             },
             providesTags: ["Vacancy"],
         }),
-        getVacancies: builder.query<TPublicVacancies[], void>({
-            //@ts-ignore
-            queryFn: async () => {
+        getVacancies: builder.query<TPublicVacancies[], { filters: TSearchOptionsType; limitPerPage: number }>({
+            queryFn: async ({ filters, limitPerPage }) => {
                 try {
+                    const { search, ...rest } = filters;
+
                     const companiesData = new Map<string, TRequiredCompanyInfo>();
                     const vacancies: TUploadDataCompanyVacancy[] = [];
-                    const vacanciesQuery = query(collection(firestore, "vacancies"));
+                    const vacancyFilters = createFiltersQuery<TUploadDataCompanyVacancy>(rest);
+                    const vacanciesQuery = query(
+                        collection(firestore, "vacancies"),
+                        ...vacancyFilters,
+                        limit(search ? Infinity : limitPerPage)
+                    );
 
-                    (await getDocs(vacanciesQuery)).forEach((doc) => {
-                        vacancies.push(doc.data() as TUploadDataCompanyVacancy);
-                    });
+                    const setDocsByQuery = async (query: Query<DocumentData, DocumentData>) => {
+                        (await getDocs(query)).forEach((doc) => {
+                            vacancies.push(doc.data() as TUploadDataCompanyVacancy);
+                        });
+                    };
 
-                    const vacanciesData = Promise.all(
+                    await setDocsByQuery(vacanciesQuery);
+
+                    if (search) {
+                        const appropriateVacancies = filterVacanciesBySkillTag(vacancies, search);
+
+                        vacancies.length = 0;
+
+                        if (!!appropriateVacancies.length) {
+                            const updatedQuery = query(
+                                collection(firestore, "vacancies"),
+                                where("id", "in", appropriateVacancies),
+                                limit(limitPerPage)
+                            );
+
+                            vacancies.length = 0;
+
+                            await setDocsByQuery(updatedQuery);
+                        }
+                    }
+
+                    const vacanciesData = await Promise.all(
                         vacancies.map(async (vacancy) => {
                             const { userID, position, id } = vacancy;
 
@@ -282,6 +323,7 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
                             return { ...companiesData.get(userID)!, userID, position, id } as TPublicVacancies;
                         })
                     );
+
                     return { data: vacanciesData };
                 } catch (error: any) {
                     throw new Error(error.message);
@@ -321,7 +363,10 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
         getCompanyEmployees: builder.query<TEmployeeRefWithData[], TGetCompanyEmployees>({
             queryFn: async ({ userID, position }) => {
                 try {
-                    const filters: QueryConstraint[] = [...(position ? [where("data.position", "==", position)] : [])];
+                    const filters: QueryConstraint[] = createFiltersQuery<TEmployeeMainInfo, TEmployeeUser>(
+                        { position },
+                        "data"
+                    );
                     const vacanciesQuery = query(
                         collection(firestore, "users"),
                         where("data.currentJob", "==", userID),
@@ -443,6 +488,49 @@ export const extendedUserFirebaseApi = firebaseApi.injectEndpoints({
                 }
             },
         }),
+        replyToVacancy: builder.mutation<null, TReplyToVacancyParams>({
+            queryFn: async ({ vacancyID, candidateID, status }) => {
+                try {
+                    const vacancyRef = doc(firestore, "vacancies", vacancyID);
+                    const { candidates, userID } = (await getDoc(vacancyRef)).data() as TUploadDataCompanyVacancy;
+                    const { userData: employee, userRef: employeeRef } = await getUserDataByID<TEmployeeUser>(
+                        firestore,
+                        candidateID
+                    );
+                    const { userData: employer } = await getUserDataByID<TEmployerUser>(firestore, userID);
+
+                    const candidateIndex = candidates.findIndex((candidate) => candidate.id === candidateID);
+                    candidates[candidateIndex].status = status;
+                    await updateDoc(vacancyRef, { candidates });
+
+                    if (status === CandidateStatus.APPLIED) {
+                        employee.data.currentJob = userID;
+                        await updateDoc(employeeRef, { data: employee.data });
+                        await sendNotification(firestore, candidateID, {
+                            variant: "applied",
+                            vacancyID,
+                            id: nanoid(),
+                            avatar: employer.data.logo,
+                            date: String(new Date()),
+                            isRead: false,
+                        });
+                    }
+
+                    await sendNotification(firestore, candidateID, {
+                        variant: "rejected",
+                        vacancyID,
+                        id: nanoid(),
+                        avatar: employer.data.logo,
+                        date: String(new Date()),
+                        isRead: false,
+                    });
+
+                    return { data: null };
+                } catch (error: any) {
+                    throw new Error(error.message);
+                }
+            },
+        }),
     }),
 });
 
@@ -463,6 +551,7 @@ export const {
     useApplyForVacancyMutation,
     useGetSavedJobsQuery,
     useGetVacancyCandidatesInfoQuery,
+    useReplyToVacancyMutation,
 } = extendedUserFirebaseApi;
 
 export const { setUserLoading, addStaticlyStatItem } = userSlice.actions;
